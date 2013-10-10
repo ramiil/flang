@@ -1,0 +1,17 @@
+# Sample program from fLang interpreter.
+# It prints some pseudorandom numbers.
+# fLang 2013 (c) Ramiil Hetzer
+
+include lib/rand.src
+
+begin
+ set count, 99999
+ set kex, 547
+ label :loop
+  rand [kex]
+  set kex, [_last]
+  out [_last], /n
+  sub [count], 1
+  set count, [_last]
+ jmz :loop
+end

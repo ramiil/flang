@@ -1,0 +1,10 @@
+func normalize
+ set rezult, [normalize.x]
+ set counter, [normalize.y]
+ label :loop
+  conc "0", [rezult]
+  set rezult, [_last]
+  sub [counter], 1
+  set counter, [_last]
+ jmz :loop
+return [rezult]
