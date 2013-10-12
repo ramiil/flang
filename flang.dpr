@@ -8,7 +8,7 @@ uses SysUtils;
 
 type theVar=record
   Name:  string[32];
-  Value: string[255];
+  Value: string[128];
 end;
 
 type theLabel=record
@@ -45,7 +45,7 @@ function SetVar(v_name, v_value: string):string;
 var j: integer;
 begin
   if v_name[1]='_' then begin
-    Writeln(IntToStr(i)+': Unacceptable name "'+v_name+'"');
+    WriteLn(IntToStr(i)+': Unacceptable name "'+v_name+'"');
     SetVar:='~break';
     exit;
   end;
@@ -193,6 +193,8 @@ var buf, temp: string;
 begin
   buf:='';
   temp:=op;
+  if isDebug then
+    WriteLn('[Debug] (', i, '): Trying to ops `'+op+'`');
   if ((op[1]='"') and (op[length(op)]='"')) then
     temp:=copy(op, 2, length(op)-2) else
   if ((op[1]='[') and (op[length(op)]=']')) then begin
@@ -255,12 +257,15 @@ end;
 
 procedure MakeJump(Address: string);
 begin
+  if isDebug then
+    WriteLn('[Debug] (', i, '): Making jump to `'+ Address +'`');
   if TypeOf(Address)='int' then i:=StrToInt(Address);
   if TypeOf(Address)='string' then i:=GetLabelAddr(Address);
 end;
 
 function Execute(inpStr: string):string;
 var fx, op1, op2, buf: string;
+    j:integer;
 begin
   Execute:='';
 
@@ -272,7 +277,7 @@ begin
 
   if GetFuncAddr(fx)<>0 then begin
     if (returnIndex>255) then begin
-      Writeln('[Error] Stack owerflow at line ', i);
+      WriteLn('[Error] Stack owerflow at line ', i);
       Execute:='~break';
       exit;
     end;
@@ -307,6 +312,26 @@ begin
       Execute:=IntToStr(StrToInt(ops(op1)) div StrToInt(ops(op2)));
   end;
 
+  if fx='dbginfo' then begin
+    WriteLn('[Debug] (', i, '): Generating debug info.');
+
+    WriteLn('Variables');
+    for j:=1 to Length(vars) do if vars[j].Name<>'' then Writeln(' Var['+
+    IntToStr(j)+'] Name: `'+vars[j].name+'` Value: `'+vars[i].value+'`');
+
+    WriteLn(' Functions');
+    for j:=1 to Length(funcs) do if funcs[j].Name<>'' then Writeln('  Func['+
+    IntToStr(j)+'] Name: `'+funcs[j].name+'` Address: `'+
+    IntToStr(funcs[i].addr)+'`');
+
+    WriteLn(' Labels');
+    for j:=1 to Length(labels) do if labels[j].Name<>'' then Writeln('  Labels['+
+    IntToStr(j)+'] Name: `'+labels[j].name+'` Address: `'+
+    IntToStr(labels[i].addr)+'`');
+    WriteLn('[Debug] (', i, '): Debug info generated. Press any key to countinue.');
+    ReadLn;
+  end;
+
   if fx='end'   then Execute:='~break';
   if fx='label' then Execute:=rezults[i-1];
   if fx='debug' then if ops(op1)='on' then isDebug:=true else isDebug:=false;
@@ -335,8 +360,8 @@ procedure StartExec(FileName: string);
 begin
   SetLength(code, 1);
   SetLength(rezults, 1);
-  Writeln('[Info] Program started, '+IntToStr(OpenFile(FileName,1))+' strings loaded.');
-  Writeln;
+  WriteLn('[Info] Program started, '+IntToStr(OpenFile(FileName,1))+' strings loaded.');
+  WriteLn;
   returnIndex:=1;
   cyclesCount:=0;
   repeat
@@ -344,24 +369,25 @@ begin
     inc(i);
     rezults[i]:=Execute(code[i]);
     if isDebug=true then
-      writeln('[Debug] (', i, '): Expression `', code[i], '` returns `', rezults[i], '`');
+      WriteLn('[Debug] (', i, '): Expression `', code[i], '` returns `', rezults[i], '`');
     Inc(cyclesCount);
   until (rezults[i]='~break') or (i>=length(code));
-  Writeln;
-  Writeln('[Info] Program finished, '+IntToStr(cyclesCount)+' passes processed.');
+  WriteLn;
+  WriteLn('[Info] Program finished, '+IntToStr(cyclesCount)+' passes processed.');
 end;
 
 begin
   DecimalSeparator:='.';
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1);
-  Writeln('fLang command line interpreter v0.8.6c (04.10.2013), (C) Ramiil Hetzer');
-  Writeln('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
-  Writeln;
+  WriteLn('fLang CLI v0.8.6c (04.10.2013), (C) Ramiil Hetzer');
+  WriteLn('http://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
+  WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
+  WriteLn;
   while (FileName='') do begin
     Write('File> ');
     Readln(FileName);
     if not ((FileExists(FileName)) or (FileExists(FileName+'.src'))) then FileName:='';
   end;
   StartExec(FileName);
-  Readln;
+  ReadLn;
 end.
