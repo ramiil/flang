@@ -1,18 +1,19 @@
 # Sample program from fLang interpreter.
-# It prints some pseudorandom numbers.
+# Speedtest based on LKM pseudorandom generator
 # fLang 2013 (c) Ramiil Hetzer
 
 include lib/rand.src
 
 begin
- debug on
- set count, 1000
+ debug off
+ set count, 10
  set kex, 547
  label :loop
   rand [kex]
   set kex, [_last]
-  # out [_last], /n
+  out [_last], /n
   sub [count], 1
   set count, [_last]
- jmz :loop
+  more [_last], 1
+ jmp :loop
 end

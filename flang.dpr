@@ -24,7 +24,6 @@ end;
 var
   returnAddress: array [1..255] of integer;
   code:          array of string[255];
-  rezults:       array of string[255];
   vars:          array of TheVar;
   labels:        array of TheLabel;
   funcs:         array of TheFunc;
@@ -251,7 +250,6 @@ begin
   end;
   close(t);
   OpenFile:=j-1;
-  SetLength(rezults,j);
   Preproc(j-1);
 end;
 
@@ -299,11 +297,9 @@ begin
     vars[GetVarIndex(ops(op1))].Name:='';
   end;
 
-  if fx='eq' then begin
-    if ops(op1)=ops(op2) then Execute:='0';
-    if ops(op1)>ops(op2) then Execute:='1';
-    if ops(op1)<ops(op2) then Execute:='-1';
-  end;
+  if fx='eq' then if ops(op1)<>ops(op2)  then inc(i);
+  if fx='less' then if ops(op1)>ops(op2) then inc(i);
+  if fx='more' then if ops(op1)<ops(op2) then inc(i);
 
   if fx='div' then begin
     if TypeOf(ops(op1))='float' then
@@ -333,7 +329,6 @@ begin
   end;
 
   if fx='end'   then Execute:='~break';
-  if fx='label' then Execute:=rezults[i-1];
   if fx='debug' then if ops(op1)='on' then isDebug:=true else isDebug:=false;
   if fx='nop'   then Sleep(StrToInt(ops(op1)));
   if fx='out'   then if op2='/n' then WriteLn(ops(op1)) else Write(ops(op1));
@@ -349,29 +344,22 @@ begin
   if fx='len'   then Execute:=IntToStr(length(ops(op1)));
   if fx='getc'  then Execute:=copy(ops(op1),StrToInt(ops(op2)),1);
   if fx='jmp'   then MakeJump(op1);
-
-  if (fx='jez') and (StrToInt(ops(rezults[i-1]))=0)  then MakeJump(ops(op1));
-  if (fx='jnz') and (StrToInt(ops(rezults[i-1]))<>0) then MakeJump(ops(op1));
-  if (fx='jmz') and (StrToInt(ops(rezults[i-1]))>0)  then MakeJump(ops(op1));
-  if (fx='jlz') and (StrToInt(ops(rezults[i-1]))<0)  then MakeJump(ops(op1));
 end;
 
 procedure StartExec(FileName: string);
 begin
   SetLength(code, 1);
-  SetLength(rezults, 1);
   WriteLn('[Info] Program started, '+IntToStr(OpenFile(FileName,1))+' strings loaded.');
   WriteLn;
   returnIndex:=1;
   cyclesCount:=0;
   repeat
-    lastRezult:=rezults[i];
     inc(i);
-    rezults[i]:=Execute(code[i]);
+    lastRezult:=Execute(code[i]);
     if isDebug=true then
-      WriteLn('[Debug] (', i, '): Expression `', code[i], '` returns `', rezults[i], '`');
+      WriteLn('[Debug] (', i, '): Expression `', code[i], '` returns `', lastRezult, '`');
     Inc(cyclesCount);
-  until (rezults[i]='~break') or (i>=length(code));
+  until (lastRezult='~break') or (i>=length(code));
   WriteLn;
   WriteLn('[Info] Program finished, '+IntToStr(cyclesCount)+' passes processed.');
 end;
@@ -379,7 +367,7 @@ end;
 begin
   DecimalSeparator:='.';
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1);
-  WriteLn('fLang CLI v0.8.6c (04.10.2013), (C) Ramiil Hetzer');
+  WriteLn('fLang CLI v0.8.6d (17.10.2013), (C) Ramiil Hetzer');
   WriteLn('http://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
   WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
   WriteLn;

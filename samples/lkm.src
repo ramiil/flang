@@ -16,5 +16,6 @@ begin
   out [_last], /n
   sub [count], 1
   set count, [_last]
- jmz :loop
+  more [_last], 1
+ jmp :loop
 end
