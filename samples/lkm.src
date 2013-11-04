@@ -2,7 +2,7 @@
 # It prints some pseudorandom numbers.
 # fLang 2013 (c) Ramiil Hetzer
 
-include lib/rand.src
+include lib/math.src
 
 begin
  out "Random func test", /n

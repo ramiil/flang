@@ -1,0 +1,6 @@
+include lib/strutils.src
+
+begin
+ cdr "qwertyuio", 2
+ out [_last], /n
+end

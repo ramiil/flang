@@ -2,7 +2,7 @@
 # Speedtest based on LKM pseudorandom generator
 # fLang 2013 (c) Ramiil Hetzer
 
-include lib/rand.src
+include lib/math.src
 
 begin
  debug off

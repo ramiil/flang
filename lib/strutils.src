@@ -1,0 +1,29 @@
+# fLang 2013 (c) Ramiil Hetzer
+
+func car
+ set i, 1
+ set rezult, ""
+ label car_start
+  getc [car.x], [i]
+  conc [rezult], [_last]
+  set rezult, [_last]
+  add [i], 1
+  set i, [_last]
+  less [i], [car.y]
+ jmp car_start
+return [rezult]
+
+func cdr
+ add [cdr.y], 1
+ set i, [_last]
+ set rezult, ""
+ label cdr_start
+  getc [cdr.x], [i]
+  conc [rezult], [_last]
+  set rezult, [_last]
+  add [i], 1
+  set i, [_last]
+  len [cdr.x]
+  less [i], [_last]
+ jmp cdr_start
+return [rezult]

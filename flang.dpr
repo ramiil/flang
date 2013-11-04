@@ -207,6 +207,8 @@ begin
     else temp:=GetVarValue(buf);
   end;
   ops:=temp;
+  if isDebug then
+    Writeln('[Debug] (', i, '): Ops of `'+op+'` is equal `'+temp+'`');
 end;
 
 function cclear(Expr: string):string;
@@ -298,6 +300,7 @@ begin
   end;
 
   if fx='eq' then if ops(op1)<>ops(op2)  then inc(i);
+  if fx='neq' then if ops(op1)=ops(op2) then inc(i);
   if fx='less' then if ops(op1)>ops(op2) then inc(i);
   if fx='more' then if ops(op1)<ops(op2) then inc(i);
 
@@ -307,7 +310,7 @@ begin
     else
       Execute:=IntToStr(StrToInt(ops(op1)) div StrToInt(ops(op2)));
   end;
-
+  {
   if fx='dbginfo' then begin
     WriteLn('[Debug] (', i, '): Generating debug info.');
 
@@ -327,7 +330,7 @@ begin
     WriteLn('[Debug] (', i, '): Debug info generated. Press any key to countinue.');
     ReadLn;
   end;
-
+  }
   if fx='end'   then Execute:='~break';
   if fx='debug' then if ops(op1)='on' then isDebug:=true else isDebug:=false;
   if fx='nop'   then Sleep(StrToInt(ops(op1)));
@@ -348,11 +351,13 @@ end;
 
 procedure StartExec(FileName: string);
 begin
+  DecimalSeparator:='.';
   SetLength(code, 1);
-  WriteLn('[Info] Program started, '+IntToStr(OpenFile(FileName,1))+' strings loaded.');
-  WriteLn;
   returnIndex:=1;
   cyclesCount:=0;
+  WriteLn('[Info] Program started, '+IntToStr(OpenFile(FileName,1))+' strings loaded.');
+  WriteLn;
+
   repeat
     inc(i);
     lastRezult:=Execute(code[i]);
@@ -365,12 +370,12 @@ begin
 end;
 
 begin
-  DecimalSeparator:='.';
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1);
-  WriteLn('fLang CLI v0.8.6d (17.10.2013), (C) Ramiil Hetzer');
+  WriteLn('fLang CLI v0.8.6e (17.10.2013), (C) Ramiil Hetzer');
   WriteLn('http://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
   WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
   WriteLn;
+
   while (FileName='') do begin
     Write('File> ');
     Readln(FileName);

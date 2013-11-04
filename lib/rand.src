@@ -1,7 +1,0 @@
-# fLang 2013 (c) Ramiil Hetzer
-
-func rand
- mul [rand.x], 73
- add [_last], 123
- mod [_last], 607
-return [_last]
