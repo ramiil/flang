@@ -1,0 +1,7 @@
+include lib/math.src
+
+begin
+ //debug on
+ pow [_inp], 4
+ out [_last]
+end

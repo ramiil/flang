@@ -43,11 +43,14 @@ end;
 function SetVar(v_name, v_value: string):string;
 var j: integer;
 begin
+
+  { The "_" perfix is only for system variatables }
   if v_name[1]='_' then begin
     WriteLn(IntToStr(i)+': Unacceptable name "'+v_name+'"');
     SetVar:='~break';
     exit;
   end;
+  
   for j:=1 to length(vars)-1 do begin
     if (vars[j].Name='void') or (vars[j].Name=v_name) then begin
       vars[j].Name:=v_name;
@@ -125,23 +128,25 @@ begin
   end;
 end;
 
-function TypeOf(InpStr: string):string;
+{ Function returns type of argument }
+function TypeOf(inpStr: string):string;
 var j: integer;
 begin
   TypeOf:='int';
-  if ((InpStr='full') or (InpStr='null') or (InpStr='')) then TypeOf:='bool';
+  if ((inpStr='true') or (inpStr='null') or (inpStr='')) then TypeOf:='bool';
   for j:=1 to length(InpStr) do begin
-    if (InpStr[j] in [',', '.']) then begin
+    if (inpStr[j] in [',', '.']) then begin
       TypeOf:='float';
       break;
     end;
-    if not (InpStr[j] in ['0'..'9','-','+']) then begin
+    if not (inpStr[j] in ['0'..'9','-','+']) then begin
       TypeOf:='string';
       break;
     end;
   end;
 end;
 
+{ Function extracts part of string before delimiter }
 function StrHead(str: string; delimiter: string):string;
 begin
   if pos(delimiter,str)<>0 then
@@ -150,6 +155,7 @@ begin
     StrHead:=str;
 end;
 
+{ Function extracts part of string after delimiter }
 function StrTail(str: string; delimiter: string):string;
 begin
   if pos(delimiter,str)<>0 then
@@ -162,22 +168,22 @@ procedure Preproc(codeEnd: integer);
 var j: integer;
     cStrHead, cStrTail: string;
 begin
-  i:=0;
+  i:=0;  // Set code pointer to first line
   j:=1;
-  SetLength(vars, 1);
-  SetLength(labels, 1);
-  SetLength(funcs, 1);
+  SetLength(vars, 1);    //  ||
+  SetLength(labels, 1);  //  ||  Set array size to 1;
+  SetLength(funcs, 1);   //  ||
   while(j<codeEnd) do begin
     cStrHead:=StrHead(code[j], ' ');
     cStrTail:=StrTail(code[j], ' ');
-    if (cStrHead='#') or (cStrHead='//') then code[j]:='';
+    if (cStrHead='#') or (cStrHead='//') then code[j]:=''; // Cut the comments
     if cStrHead='begin' then i:=j;
-    if cStrHead='set' then SetLength(vars, Length(vars)+1);
-    if cStrHead='label' then begin
+    if cStrHead='set'   then SetLength(vars, Length(vars)+1); // Set new var
+    if cStrHead='label' then begin                 // Set new label
       SetLength(labels, Length(labels)+1);
       SetLabel(cStrTail, j);
     end;
-    if cStrHead='func' then begin
+    if cStrHead='func' then begin                  // Set new function
       SetLength(funcs, Length(funcs)+1);
       SetLength(vars, Length(vars)+2);
       SetFunc(cStrTail, j);
@@ -208,7 +214,7 @@ begin
   end;
   ops:=temp;
   if isDebug then
-    Writeln('[Debug] (', i, '): Ops of `'+op+'` is equal `'+temp+'`');
+    Writeln('[Debug] (', i, '): Ops of `'+op+'` equals `'+temp+'`');
 end;
 
 function cclear(Expr: string):string;
@@ -216,8 +222,8 @@ var spFlag, qFlag: boolean;
     j: byte;
     buf: string;
 begin
-  qFlag:=false;
-  spFlag:=true;
+  qFlag:=false;  // Pointer in the "" block?
+  spFlag:=true;  // Previous character is a space?
   buf:='';
   for j:=1 to length(Expr) do begin
     if Expr[j]='"' then qFlag:=not qFlag;
@@ -237,19 +243,24 @@ var t: textfile;
     j: integer;
     buf: string;
 begin
+  OpenFile:=0;
+  
   if not (FileExists(fName)) then fName:=fName+'.src';
   if not (FileExists(fName)) then Exit;
   assign(t,fName);
   reset(t);
   j:=index;
+
   while not EOF(t) do begin
     SetLength(code,length(code)+1);
     Readln(t,buf);
     buf:=cclear(buf);
+    { Include a source file }
     if StrHead(buf,' ')='include' then j:=OpenFile(ops(StrTail(buf,' ')),j)
     else code[j]:=buf;
     inc(j);
   end;
+  
   close(t);
   OpenFile:=j-1;
   Preproc(j-1);
@@ -257,7 +268,7 @@ end;
 
 procedure MakeJump(Address: string);
 begin
-  if isDebug then
+  if isDebug then    // Print a debug message
     WriteLn('[Debug] (', i, '): Making jump to `'+ Address +'`');
   if TypeOf(Address)='int' then i:=StrToInt(Address);
   if TypeOf(Address)='string' then i:=GetLabelAddr(Address);
@@ -269,40 +280,44 @@ var fx, op1, op2, buf: string;
 begin
   Execute:='';
 
-  while pos(', ',inpStr)<>0 do inpStr:=StringReplace(inpStr,', ',',',[rfreplaceall]);
-  fx:=StrHead(inpStr,' ');
+  {Extract operands from inpStr}
+  while pos(', ',inpStr)<>0 do
+    inpStr:=StringReplace(inpStr,', ',',',[rfreplaceall]);
+  fx:=StrHead(inpStr,' ');   // fx contains operator name
   buf:=StrTail(inpStr,' ');
-  op1:=StrHead(buf,',');
-  op2:=StrTail(buf,',');
+  op1:=StrHead(buf,',');     // op1 contains the first argument
+  op2:=StrTail(buf,',');     // op2 contains the second argument
 
+  {Check fx for user-defined function}
   if GetFuncAddr(fx)<>0 then begin
-    if (returnIndex>255) then begin
+    if (returnIndex>255) then begin   // Check function call stack fill
       WriteLn('[Error] Stack owerflow at line ', i);
       Execute:='~break';
       exit;
     end;
-    if op1<>'' then SetVar(fx+'.x',ops(op1));
-    if op2<>'' then SetVar(fx+'.y',ops(op2));
-    returnAddress[returnIndex]:=i;
+    if op1<>'' then SetVar(fx+'.x',ops(op1)); // Define the first argument as X
+    if op2<>'' then SetVar(fx+'.y',ops(op2)); // Define the second argument as Y
+    returnAddress[returnIndex]:=i;            // Set return adress
     inc(returnIndex);
-    MakeJump(IntToStr(GetFuncAddr(fx)));
+    MakeJump(IntToStr(GetFuncAddr(fx)));      // Making jump to the function
   end;
 
   if fx='return' then begin
-    if op1<>'' then Execute:=ops(op1);
+    if op1<>'' then Execute:=ops(op1);        // Check return data
     dec(returnIndex);
     MakeJump(IntToStr(returnAddress[returnIndex]));
   end;
 
+  { ! Experimental ! }
   if fx='unset' then begin
     SetVar(ops(op1), '');
     vars[GetVarIndex(ops(op1))].Name:='';
   end;
 
-  if fx='eq' then if ops(op1)<>ops(op2)  then inc(i);
-  if fx='neq' then if ops(op1)=ops(op2) then inc(i);
-  if fx='less' then if ops(op1)>ops(op2) then inc(i);
-  if fx='more' then if ops(op1)<ops(op2) then inc(i);
+  if fx='eq'   then if ops(op1)<>ops(op2) then inc(i);
+  if fx='neq'  then if ops(op1)=ops(op2)  then inc(i);
+  if fx='less' then if ops(op1)>ops(op2)  then inc(i);
+  if fx='more' then if ops(op1)<ops(op2)  then inc(i);
 
   if fx='div' then begin
     if TypeOf(ops(op1))='float' then
@@ -310,7 +325,7 @@ begin
     else
       Execute:=IntToStr(StrToInt(ops(op1)) div StrToInt(ops(op2)));
   end;
-  {
+
   if fx='dbginfo' then begin
     WriteLn('[Debug] (', i, '): Generating debug info.');
 
@@ -330,22 +345,22 @@ begin
     WriteLn('[Debug] (', i, '): Debug info generated. Press any key to countinue.');
     ReadLn;
   end;
-  }
+
   if fx='end'   then Execute:='~break';
   if fx='debug' then if ops(op1)='on' then isDebug:=true else isDebug:=false;
   if fx='nop'   then Sleep(StrToInt(ops(op1)));
   if fx='out'   then if op2='/n' then WriteLn(ops(op1)) else Write(ops(op1));
 
-  if fx='set'   then Execute:=SetVar(ops(op1),ops(op2));
+  if fx='set'   then Execute:=SetVar(ops(op1), ops(op2));
 
   if fx='add'   then Execute:=IntToStr(StrToInt(ops(op1)) + StrToInt(ops(op2)));
   if fx='sub'   then Execute:=IntToStr(StrToInt(ops(op1)) - StrToInt(ops(op2)));
   if fx='mul'   then Execute:=IntToStr(StrToInt(ops(op1)) * StrToInt(ops(op2)));
   if fx='mod'   then Execute:=IntToStr(StrToInt(ops(op1)) mod StrToInt(ops(op2)));
 
-  if fx='conc'  then Execute:=ops(op1)+ops(op2);
+  if fx='conc'  then Execute:=ops(op1) + ops(op2);
   if fx='len'   then Execute:=IntToStr(length(ops(op1)));
-  if fx='getc'  then Execute:=copy(ops(op1),StrToInt(ops(op2)),1);
+  if fx='getc'  then Execute:=copy(ops(op1), StrToInt(ops(op2)),1);
   if fx='jmp'   then MakeJump(op1);
 end;
 

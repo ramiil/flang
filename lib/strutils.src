@@ -1,4 +1,5 @@
 # fLang 2013 (c) Ramiil Hetzer
+# Standart string utils libriary
 
 func car
  set i, 1
