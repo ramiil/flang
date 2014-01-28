@@ -5,6 +5,7 @@
 include lib/math.src
 
 begin
+ debug on
  out "Random func test", /n
  out "How many numbers you need? "
  set count, [_inp]

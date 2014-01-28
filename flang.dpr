@@ -43,10 +43,9 @@ end;
 function SetVar(v_name, v_value: string):string;
 var j: integer;
 begin
-
   { The "_" perfix is only for system variatables }
   if v_name[1]='_' then begin
-    WriteLn(IntToStr(i)+': Unacceptable name "'+v_name+'"');
+    WriteLn('[Error] ('+IntToStr(i)+'): Unacceptable name "'+v_name+'"');
     SetVar:='~break';
     exit;
   end;
@@ -74,6 +73,7 @@ end;
 function GetVarValue(v_name: string):string;
 var j: integer;
 begin
+  GetVarValue:='';
   for j:=1 to length(vars)-1 do if vars[j].Name=v_name then begin
     GetVarValue:=vars[j].Value;
     break;
@@ -135,7 +135,7 @@ begin
   TypeOf:='int';
   if ((inpStr='true') or (inpStr='null') or (inpStr='')) then TypeOf:='bool';
   for j:=1 to length(InpStr) do begin
-    if (inpStr[j] in [',', '.']) then begin
+    if (inpStr[j]='.') then begin
       TypeOf:='float';
       break;
     end;
@@ -176,8 +176,8 @@ begin
   while(j<codeEnd) do begin
     cStrHead:=StrHead(code[j], ' ');
     cStrTail:=StrTail(code[j], ' ');
-    if (cStrHead='#') or (cStrHead='//') then code[j]:=''; // Cut the comments
-    if cStrHead='begin' then i:=j;
+    if (cStrHead='--') then code[j]:='nop 0'; // Cut the comments
+    if (cStrHead='func') and (cStrTail='main') then i:=j;
     if cStrHead='set'   then SetLength(vars, Length(vars)+1); // Set new var
     if cStrHead='label' then begin                 // Set new label
       SetLength(labels, Length(labels)+1);
@@ -274,6 +274,45 @@ begin
   if TypeOf(Address)='string' then i:=GetLabelAddr(Address);
 end;
 
+function m_add(op1, op2:string):string;
+begin
+  if(TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
+    Writeln('[Error] (', i,')  "'+op1+'" or "'+op2+'" is not a number. Program stopped');
+   m_add:='~break';
+   exit;
+  end;
+  if (TypeOf(op1)='float') or (TypeOf(op2)='float') then
+  m_add:=FloatToStr(StrToFloat(op1)+StrToFloat(op2))
+  else if (TypeOf(op1)='int') or (TypeOf(op2)='int') then
+  m_add:=IntToStr(StrToInt(op1)+StrToInt(op2));
+end;
+
+function m_sub(op1, op2:string):string;
+begin
+  if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
+    Writeln('[Error] (', i,')  "'+op1+'" or "'+op2+'" is not a number. Program stopped');
+    m_sub:='~break';
+    exit;
+  end;
+  if (TypeOf(op1)='float') or (TypeOf(op2)='float') then
+  m_sub:=FloatToStr(StrToFloat(op1)-StrToFloat(op2))
+  else if (TypeOf(op1)='int') or (TypeOf(op2)='int') then
+  m_sub:=IntToStr(StrToInt(op1)-StrToInt(op2));
+end;
+
+function m_mul(op1, op2:string):string;
+begin
+  if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
+    Writeln('[Error] (', i,')  "'+op1+'" or "'+op2+'" is not a number. Program stopped');
+    m_mul:='~break';
+    exit;
+  end;
+  if (TypeOf(op1)='float') or (TypeOf(op2)='float') then
+  m_mul:=FloatToStr(StrToFloat(op1)*StrToFloat(op2))
+  else if (TypeOf(op1)='int') or (TypeOf(op2)='int') then
+  m_mul:=IntToStr(StrToInt(op1)*StrToInt(op2));
+end;
+
 function Execute(inpStr: string):string;
 var fx, op1, op2, buf: string;
     j:integer;
@@ -291,7 +330,7 @@ begin
   {Check fx for user-defined function}
   if GetFuncAddr(fx)<>0 then begin
     if (returnIndex>255) then begin   // Check function call stack fill
-      WriteLn('[Error] Stack owerflow at line ', i);
+      WriteLn('[Error] (', i, ') Stack owerflow at line');
       Execute:='~break';
       exit;
     end;
@@ -305,6 +344,10 @@ begin
   if fx='return' then begin
     if op1<>'' then Execute:=ops(op1);        // Check return data
     dec(returnIndex);
+    if returnIndex=0 then begin
+      Execute:='~break';
+      exit;
+    end;
     MakeJump(IntToStr(returnAddress[returnIndex]));
   end;
 
@@ -320,6 +363,11 @@ begin
   if fx='more' then if ops(op1)<ops(op2)  then inc(i);
 
   if fx='div' then begin
+    if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
+    Writeln('[Error] (', i,')  "'+op1+'" or "'+op2+'" is not a number. Program stopped');
+    Execute:='~break';
+    exit;
+  end;
     if TypeOf(ops(op1))='float' then
       Execute:=FloatToStr(StrToFloat(ops(op1)) / StrToFloat(ops(op2)))
     else
@@ -338,24 +386,20 @@ begin
     IntToStr(j)+'] Name: `'+funcs[j].name+'` Address: `'+
     IntToStr(funcs[i].addr)+'`');
 
-    WriteLn(' Labels');
-    for j:=1 to Length(labels) do if labels[j].Name<>'' then Writeln('  Labels['+
-    IntToStr(j)+'] Name: `'+labels[j].name+'` Address: `'+
-    IntToStr(labels[i].addr)+'`');
     WriteLn('[Debug] (', i, '): Debug info generated. Press any key to countinue.');
     ReadLn;
   end;
 
-  if fx='end'   then Execute:='~break';
   if fx='debug' then if ops(op1)='on' then isDebug:=true else isDebug:=false;
   if fx='nop'   then Sleep(StrToInt(ops(op1)));
   if fx='out'   then if op2='/n' then WriteLn(ops(op1)) else Write(ops(op1));
 
   if fx='set'   then Execute:=SetVar(ops(op1), ops(op2));
 
-  if fx='add'   then Execute:=IntToStr(StrToInt(ops(op1)) + StrToInt(ops(op2)));
-  if fx='sub'   then Execute:=IntToStr(StrToInt(ops(op1)) - StrToInt(ops(op2)));
-  if fx='mul'   then Execute:=IntToStr(StrToInt(ops(op1)) * StrToInt(ops(op2)));
+  if fx='add'   then Execute:=m_add(ops(op1), ops(op2));
+  if fx='sub'   then Execute:=m_sub(ops(op1), ops(op2));
+  if fx='mul'   then Execute:=m_mul(ops(op1), ops(op2));
+
   if fx='mod'   then Execute:=IntToStr(StrToInt(ops(op1)) mod StrToInt(ops(op2)));
 
   if fx='conc'  then Execute:=ops(op1) + ops(op2);
@@ -366,7 +410,6 @@ end;
 
 procedure StartExec(FileName: string);
 begin
-  DecimalSeparator:='.';
   SetLength(code, 1);
   returnIndex:=1;
   cyclesCount:=0;
@@ -385,8 +428,9 @@ begin
 end;
 
 begin
+  DecimalSeparator:='.';
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1);
-  WriteLn('fLang CLI v0.8.6e (17.10.2013), (C) Ramiil Hetzer');
+  WriteLn('fLang CLI v0.8.6g (15.01.2014), (C) Ramiil Hetzer');
   WriteLn('http://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
   WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
   WriteLn;

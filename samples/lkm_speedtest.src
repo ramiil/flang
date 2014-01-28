@@ -6,7 +6,7 @@ include lib/math.src
 
 begin
  debug off
- set count, 10
+ set count, 50000
  set kex, 547
  label :loop
   rand [kex]

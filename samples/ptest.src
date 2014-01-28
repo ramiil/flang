@@ -1,7 +1,7 @@
 include lib/math.src
 
-begin
- //debug on
- pow [_inp], 4
+func main
+ debug on
+ sin 2, 5
  out [_last]
-end
+return 0
