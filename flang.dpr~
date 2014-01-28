@@ -430,7 +430,7 @@ end;
 begin
   DecimalSeparator:='.';
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1);
-  WriteLn('fLang CLI v0.8.7 (28.01.2014), (C) Ramiil Hetzer');
+  WriteLn('fLang CLI v0.8.6g (15.01.2014), (C) Ramiil Hetzer');
   WriteLn('http://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
   WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
   WriteLn;
