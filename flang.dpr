@@ -178,12 +178,12 @@ begin
     cStrTail:=StrTail(code[j], ' ');
     if (cStrHead='--') then code[j]:='nop 0'; // Cut the comments
     if (cStrHead='func') and (cStrTail='main') then i:=j;
-    if cStrHead='set'   then SetLength(vars, Length(vars)+1); // Set new var
-    if cStrHead='label' then begin                 // Set new label
+    if cStrHead='set'   then SetLength(vars, Length(vars)+1);// Set new var
+    if cStrHead='label' then begin                           // Set new label
       SetLength(labels, Length(labels)+1);
       SetLabel(cStrTail, j);
     end;
-    if cStrHead='func' then begin                  // Set new function
+    if (cStrHead='func') and (cStrTail<>'main') then begin   // Set new function
       SetLength(funcs, Length(funcs)+1);
       SetLength(vars, Length(vars)+2);
       SetFunc(cStrTail, j);
@@ -381,7 +381,7 @@ begin
     for j:=1 to Length(vars) do if vars[j].Name<>'' then Writeln(' Var['+
     IntToStr(j)+'] Name: `'+vars[j].name+'` Value: `'+vars[i].value+'`');
 
-    WriteLn(' Functions');
+    WriteLn('Functions');
     for j:=1 to Length(funcs) do if funcs[j].Name<>'' then Writeln('  Func['+
     IntToStr(j)+'] Name: `'+funcs[j].name+'` Address: `'+
     IntToStr(funcs[i].addr)+'`');
@@ -430,7 +430,7 @@ end;
 begin
   DecimalSeparator:='.';
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1);
-  WriteLn('fLang CLI v0.8.7 (28.01.2014), (C) Ramiil Hetzer');
+  WriteLn('fLang CLI v0.8.7a (15.01.2014), (C) Ramiil Hetzer');
   WriteLn('http://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
   WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
   WriteLn;
