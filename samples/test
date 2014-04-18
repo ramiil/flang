@@ -1,0 +1,3 @@
+begin
+  out "123", /n
+end

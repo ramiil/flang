@@ -333,7 +333,6 @@ end;
 
 function Execute(inpStr: string):string;
 var fx, op1, op2, buf: string;
-    j:integer;
 begin
   Execute:='';
 
