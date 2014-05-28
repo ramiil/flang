@@ -1,3 +1,7 @@
-begin
-mul 0.2, 1
-end
+include lib/math.src
+
+func main
+  debug on
+  sin 60, 0.01
+  out [_last]
+return 0

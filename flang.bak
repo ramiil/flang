@@ -118,7 +118,7 @@ end;
 procedure SetFunc(f_name: string; f_address: integer);
 var j: integer;
 begin
-  for j:=1 to length(funcs)-1 do begin
+  for j:=1 to length(funcs) do begin
     if (funcs[j].Name='') or (funcs[j].Name=f_name) then begin
       funcs[j].Name:=f_name;
       funcs[j].Addr:=f_address;
@@ -131,7 +131,7 @@ function GetFuncAddr(f_name: string):integer;
 var j: integer;
 begin
   GetFuncAddr:=0;
-  for j:=1 to length(funcs)-1 do begin
+  for j:=1 to length(funcs) do begin
     if funcs[j].Name=f_name then begin
       GetFuncAddr:=funcs[j].Addr;
       break;
@@ -306,7 +306,7 @@ end;
 function m_sub(op1, op2:string):string;
 begin
   if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
-    ShowError('"'+ops(op1)+'" or "'+ops(op2)+'" is not a number.');
+    ShowError('"'+op1+'" or "'+op2+'" is not a number.');
     m_sub:='~break';
     exit;
   end;
@@ -397,11 +397,11 @@ begin
   if fx='more' then if ops(op1)<ops(op2) then inc(i);
 
   if fx='div' then begin
-    {if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
-    ShowError('"'+ops(op1)+'" or "'+ops(op2)+'" is not a number. ');
+    if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
+    ShowError('"'+ops(op1)+'" or "'+ops(op2)+'" is not a number.');
     Execute:='~break';
     exit;
-  end;}
+  end;
     if (TypeOf(ops(op1))='float') or (TypeOf(ops(op2))='float') then
       Execute:=FloatToStr(StrToFloat(ops(op1)) / StrToFloat(ops(op2)))
     else if (StrToInt(ops(op1)) mod StrToInt(ops(op2)) <> 0) then
