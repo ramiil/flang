@@ -1,7 +1,10 @@
-include lib/math.src
-
 func main
-  debug on
-  sin 60, 0.01
-  out [_last]
+ debug on
+ set a, 1
+ set b, -2.3
+ set c, "asf321"
+ unset a
+ unset b
+ unset c
+ dbginfo
 return 0

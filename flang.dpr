@@ -65,6 +65,7 @@ begin
     if (vars[j].Name='void') or (vars[j].Name=v_name) then begin
       vars[j].Name:=v_name;
       vars[j].Value:=v_value;
+      ShowDebugMsg('Variatable '+v_name+' takes value '+v_value);
       SetVar:=v_value;
       break;
     end;
@@ -88,6 +89,17 @@ begin
   for j:=1 to length(vars)-1 do if vars[j].Name=v_name then begin
     GetVarValue:=vars[j].Value;
     break;
+  end;
+end;
+
+procedure UnsetVar(v_name: string);
+var j: integer;
+begin
+  j:=GetVarIndex(v_name);
+  if j<>0 then begin
+    vars[j].Name:='';
+    vars[j].Value:='';
+    ShowDebugMsg('Variatable '+v_name+' destroyed');
   end;
 end;
 
@@ -386,10 +398,7 @@ begin
     MakeJump(IntToStr(returnAddress[returnIndex]));
   end;
 
-  if fx='unset' then begin
-    SetVar(ops(op1), '');
-    vars[GetVarIndex(ops(op1))].Name:='';
-  end;
+  if fx='unset' then UnsetVar(ops(op1));
 
   if fx='eq' then if ops(op1)<>ops(op2) then inc(i);
   if fx='neq' then if ops(op1)=ops(op2) then inc(i);

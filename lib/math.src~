@@ -17,6 +17,8 @@ func fac
   set fac.counter, [_last]
   more [fac.x], [fac.counter]
  jmp fac_loop
+ unset fac.rezult
+ unset fac.counter
 return [fac.rezult]
 
 func pow
@@ -35,37 +37,3 @@ func pow
  eq [pow.x], -1
  set pow.rezult, -1
 return [pow.rezult]
-
-func sin
- set sin.stx, [sin.x]
- set sin.fac, 1
- set sin.t, 0
- set sin.counter, 1
- set sin.sign, 1
- label sin_loop
-  mul [sin.stx], [sin.sign]
-  add [_last], [sin.t]
-  div [_last], [sin.fac]
-  set sin.t, [_last]
--- // 
-  add [sin.counter], 2
-  set sin.counter, [_last] 
--- //
-  pow [sin.x], 2
-  mul [_last], [sin.stx]
-  set sin.stx, [_last]
--- //
-  sub [sin.counter], 1
-  mul [_last], [sin.counter]
-  mul [_last], [sin.fac]
-  set sin.fac, [_last]
--- //
-  mul [sin.sign], -1
-  set sin.sign, [_last]
--- //
-  div [sin.stx], [sin.fac]
-  more [_last], [sin.y]
-   jmp sin_loop
-  eq [_last], [sin.y]
-   jmp sin_loop
-return [sin.t]
