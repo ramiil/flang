@@ -65,6 +65,7 @@ begin
     if (vars[j].Name='void') or (vars[j].Name=v_name) then begin
       vars[j].Name:=v_name;
       vars[j].Value:=v_value;
+      ShowDebugMsg('Variatable '+v_name+' takes value '+v_value);
       SetVar:=v_value;
       break;
     end;
@@ -88,6 +89,17 @@ begin
   for j:=1 to length(vars)-1 do if vars[j].Name=v_name then begin
     GetVarValue:=vars[j].Value;
     break;
+  end;
+end;
+
+procedure UnsetVar(v_name: string);
+var j: integer;
+begin
+  j:=GetVarIndex(v_name);
+  if j<>0 then begin
+    vars[j].Name:='';
+    vars[j].Value:='';
+    ShowDebugMsg('Variatable '+v_name+' destroyed');
   end;
 end;
 
@@ -118,7 +130,7 @@ end;
 procedure SetFunc(f_name: string; f_address: integer);
 var j: integer;
 begin
-  for j:=1 to length(funcs) do begin
+  for j:=1 to length(funcs)-1 do begin
     if (funcs[j].Name='') or (funcs[j].Name=f_name) then begin
       funcs[j].Name:=f_name;
       funcs[j].Addr:=f_address;
@@ -131,7 +143,7 @@ function GetFuncAddr(f_name: string):integer;
 var j: integer;
 begin
   GetFuncAddr:=0;
-  for j:=1 to length(funcs) do begin
+  for j:=1 to length(funcs)-1 do begin
     if funcs[j].Name=f_name then begin
       GetFuncAddr:=funcs[j].Addr;
       break;
@@ -306,7 +318,7 @@ end;
 function m_sub(op1, op2:string):string;
 begin
   if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
-    ShowError('"'+op1+'" or "'+op2+'" is not a number.');
+    ShowError('"'+ops(op1)+'" or "'+ops(op2)+'" is not a number.');
     m_sub:='~break';
     exit;
   end;
@@ -339,9 +351,10 @@ begin
   IntToStr(j)+'] Name: `'+vars[j].name+'` Value: `'+vars[j].value+'`');
 
   WriteLn('Functions');
-  for j:=1 to Length(funcs) do if funcs[j].Name<>'' then Writeln(' Func['+
-  IntToStr(j)+'] Name: `'+funcs[j].name+'` Address: `'+
-  IntToStr(funcs[j].addr)+'`');
+  for j:=1 to Length(funcs) do
+    if funcs[j].Name<>'' then Writeln(' Func['+
+    IntToStr(j)+'] Name: `'+funcs[j].name+'` Address: `'+
+    IntToStr(funcs[j].addr)+'`');
 
   WriteLn('[Debug] (', i, '): Debug info generated. Press any key to countinue.');
   ReadLn;
@@ -386,10 +399,7 @@ begin
     MakeJump(IntToStr(returnAddress[returnIndex]));
   end;
 
-  if fx='unset' then begin
-    SetVar(ops(op1), '');
-    vars[GetVarIndex(ops(op1))].Name:='';
-  end;
+  if fx='unset' then UnsetVar(ops(op1));
 
   if fx='eq' then if ops(op1)<>ops(op2) then inc(i);
   if fx='neq' then if ops(op1)=ops(op2) then inc(i);
@@ -397,11 +407,11 @@ begin
   if fx='more' then if ops(op1)<ops(op2) then inc(i);
 
   if fx='div' then begin
-    if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
-    ShowError('"'+ops(op1)+'" or "'+ops(op2)+'" is not a number.');
+    {if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
+    ShowError('"'+ops(op1)+'" or "'+ops(op2)+'" is not a number. ');
     Execute:='~break';
     exit;
-  end;
+  end;}
     if (TypeOf(ops(op1))='float') or (TypeOf(ops(op2))='float') then
       Execute:=FloatToStr(StrToFloat(ops(op1)) / StrToFloat(ops(op2)))
     else if (StrToInt(ops(op1)) mod StrToInt(ops(op2)) <> 0) then
@@ -453,7 +463,7 @@ end;
 begin
   DecimalSeparator:='.';
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1);
-  WriteLn('fLang CLI v0.8.9 (28.05.2014), (C) Ramiil Hetzer');
+  WriteLn('fLang CLI v0.9.0 (01.07.14), (C) Ramiil Hetzer');
   WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
   WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
   WriteLn;

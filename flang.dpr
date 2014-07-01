@@ -351,9 +351,10 @@ begin
   IntToStr(j)+'] Name: `'+vars[j].name+'` Value: `'+vars[j].value+'`');
 
   WriteLn('Functions');
-  for j:=1 to Length(funcs) do if funcs[j].Name<>'' then Writeln(' Func['+
-  IntToStr(j)+'] Name: `'+funcs[j].name+'` Address: `'+
-  IntToStr(funcs[j].addr)+'`');
+  for j:=1 to Length(funcs)-1 do
+    if funcs[j].Name<>'' then Writeln(' Func['+
+    IntToStr(j)+'] Name: `'+funcs[j].name+'` Address: `'+
+    IntToStr(funcs[j].addr)+'`');
 
   WriteLn('[Debug] (', i, '): Debug info generated. Press any key to countinue.');
   ReadLn;
@@ -462,7 +463,7 @@ end;
 begin
   DecimalSeparator:='.';
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1);
-  WriteLn('fLang CLI v0.8.9 (28.05.2014), (C) Ramiil Hetzer');
+  WriteLn('fLang CLI v0.9.0 (01.07.14), (C) Ramiil Hetzer');
   WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
   WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
   WriteLn;

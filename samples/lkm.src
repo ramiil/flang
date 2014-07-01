@@ -1,10 +1,10 @@
 # Sample program from fLang interpreter.
 # It prints some pseudorandom numbers.
-# fLang 2013 (c) Ramiil Hetzer
+# fLang 2014 (c) Ramiil Hetzer
 
 include lib/math.src
 
-begin
+func main
  debug on
  out "Random func test", /n
  out "How many numbers you need? "
@@ -19,4 +19,4 @@ begin
   set count, [_last]
   more [_last], 1
  jmp :loop
-end
+return 0
