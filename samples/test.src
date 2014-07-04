@@ -1,10 +1,7 @@
+include lib/strutils.src
+
 func main
- debug on
- set a, 1
- set b, -2.3
- set c, "asf321"
- unset a
- unset b
- unset c
+ pos "12345678", " "
+ out [_last], /n
  dbginfo
 return 0

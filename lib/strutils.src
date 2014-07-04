@@ -1,30 +1,50 @@
 -- fLang 2013 (c) Ramiil Hetzer
--- Standart string utils libriary
+-- Standart string utilits libriary
+
+func pos
+ debug on
+ set pos.counter, 1
+ len [pos.x]
+ set pos.length, [_last]
+ label @pos.start
+  getc [pos.x], [pos.counter]
+  eq [_last], [pos.y]
+ jmp @pos.exit
+  add [pos.counter], 1
+  set pos.counter, [_last]
+  meq [pos.counter], [pos.length]
+ jmp @pos.start
+ label @pos.exit
+return [pos.counter]
 
 func car
- set i, 1
- set rezult, ""
- label car_start
-  getc [car.x], [i]
-  conc [rezult], [_last]
-  set rezult, [_last]
-  add [i], 1
-  set i, [_last]
-  less [i], [car.y]
- jmp car_start
-return [rezult]
+ pos [car.x], [car.y]
+ set car.dpos, [_last]
+ set car.rez, ""
+ set car.counter, 1
+ label @car.start
+  getc [car.x], [car.counter]
+  conc [car.rez], [_last]
+  set car.rez, [_last]
+  add [car.counter], 1
+  set car.counter, [_last]
+  less [car.counter], [car.dpos]
+ jmp @car.start
+return [car.rez]
 
 func cdr
- add [cdr.y], 1
- set i, [_last]
- set rezult, ""
- label cdr_start
-  getc [cdr.x], [i]
-  conc [rezult], [_last]
-  set rezult, [_last]
-  add [i], 1
-  set i, [_last]
-  len [cdr.x]
-  less [i], [_last]
- jmp cdr_start
-return [rezult]
+ pos [cdr.x], [cdr.y]
+ add [_last], 1
+ set cdr.counter, [_last]
+ set cdr.rez, ""
+ len [cdr.x]
+ set cdr.length, [_last]
+ label @cdr.start
+  getc [cdr.x], [cdr.counter]
+  conc [cdr.rez], [_last]
+  set cdr.rez, [_last]
+  add [cdr.counter], 1
+  set cdr.counter, [_last]
+  meq [cdr.counter], [cdr.length]
+ jmp @cdr.start
+return [cdr.rez]

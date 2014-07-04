@@ -30,6 +30,7 @@ var
   fileName, lastRezult: string;
   i, returnIndex, cyclesCount: integer;
   isDebug: boolean=false;
+  isTrace: boolean=false;
 
 procedure ShowError(errorMsg: string);
 begin
@@ -364,6 +365,7 @@ function Execute(inpStr: string):string;
 var fx, op1, op2, buf: string;
     j:integer;
 begin
+  ShowDebugMsg('Execute expression `'+inpStr+'`');
   Execute:='';
 
   {Extract operands from inpStr}
@@ -401,10 +403,12 @@ begin
 
   if fx='unset' then UnsetVar(ops(op1));
 
-  if fx='eq' then if ops(op1)<>ops(op2) then inc(i);
-  if fx='neq' then if ops(op1)=ops(op2) then inc(i);
-  if fx='less' then if ops(op1)>ops(op2) then inc(i);
-  if fx='more' then if ops(op1)<ops(op2) then inc(i);
+  if fx='eq'   then if not (ops(op1)=ops(op2))  then inc(i);
+  if fx='neq'  then if not (ops(op1)<>ops(op2)) then inc(i);
+  if fx='less' then if not (ops(op1)<ops(op2))  then inc(i);
+  if fx='more' then if not (ops(op1)>ops(op2))  then inc(i);
+  if fx='leq'  then if not (ops(op1)<=ops(op2)) then inc(i);
+  if fx='meq'  then if not (ops(op1)>=ops(op2)) then inc(i);
 
   if fx='div' then begin
     {if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
@@ -423,6 +427,7 @@ begin
   if fx='dbginfo' then GenDbgInfo;
 
   if fx='debug' then if ops(op1)='on' then isDebug:=true else isDebug:=false;
+  if fx='trace' then if ops(op1)='on' then isTrace:=true else isTrace:=false;
   if fx='nop' then Sleep(StrToInt(ops(op1)));
   if fx='out' then if op2='/n' then WriteLn(ops(op1)) else Write(ops(op1));
 
@@ -436,8 +441,9 @@ begin
 
   if fx='conc' then Execute:=ops(op1) + ops(op2);
   if fx='len'  then Execute:=IntToStr(length(ops(op1)));
-  if fx='getc' then Execute:=copy(ops(op1), StrToInt(ops(op2)),1);
+  if fx='getc' then Execute:=ops(op1)[StrToInt(ops(op2))];
   if fx='jmp'  then MakeJump(op1);
+  ShowDebugMsg('Expression `'+code[i]+'` returns `'+Execute+'`');
 end;
 
 procedure StartExec(FileName: string);
@@ -451,10 +457,11 @@ begin
   repeat
     inc(i);
     lastRezult:=Execute(code[i]);
-
-    ShowDebugMsg('Expression `'+code[i]+'` returns `'+lastRezult+'`');
-
-    Inc(cyclesCount);
+    inc(cyclesCount);
+    if isTrace then begin
+      Writeln;
+      Readln;
+    end
   until (lastRezult='~break') or (i>=length(code));
   WriteLn;
   WriteLn('[Info] Program finished, '+IntToStr(cyclesCount)+' passes processed.');
