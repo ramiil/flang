@@ -34,13 +34,13 @@ var
 
 procedure ShowError(errorMsg: string);
 begin
-  WriteLn('[Error] ('+IntToStr(i)+') '+errorMsg);
+  WriteLn('[Error] ('+IntToStr(i)+'): '+errorMsg);
 end;
 
 procedure ShowDebugMsg(DebugMsg: string);
 begin
   if IsDebug then
-  WriteLn('[Debug] ('+IntToStr(i)+') '+DebugMsg);
+  WriteLn('[Debug] ('+IntToStr(i)+'): '+DebugMsg);
 end;
 
 procedure VoidAll;
@@ -303,43 +303,32 @@ begin
   if TypeOf(Address)='string' then i:=GetLabelAddr(Address);
 end;
 
-function m_add(op1, op2:string):string;
+function mathEval(fx, op1, op2:string):string;
 begin
-  if(TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
-    ShowError('"'+op1+'" or "'+op2+'" is not a number.');
-    m_add:='~break';
+  if(TypeOf(op1)='string') then begin
+    ShowError('"'+op1+'" is not a number.');
+    mathEval:='~break';
     exit;
   end;
-  if (TypeOf(op1)='float') or (TypeOf(op2)='float') then
-  m_add:=FloatToStr(StrToFloat(op1)+StrToFloat(op2))
-  else if (TypeOf(op1)='int') or (TypeOf(op2)='int') then
-  m_add:=IntToStr(StrToInt(op1)+StrToInt(op2));
-end;
-
-function m_sub(op1, op2:string):string;
-begin
-  if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
-    ShowError('"'+ops(op1)+'" or "'+ops(op2)+'" is not a number.');
-    m_sub:='~break';
+  if(TypeOf(op2)='string') then begin
+    ShowError('"'+op2+'" is not a number.');
+    mathEval:='~break';
     exit;
   end;
-  if (TypeOf(op1)='float') or (TypeOf(op2)='float') then
-  m_sub:=FloatToStr(StrToFloat(op1)-StrToFloat(op2))
-  else if (TypeOf(op1)='int') or (TypeOf(op2)='int') then
-  m_sub:=IntToStr(StrToInt(op1)-StrToInt(op2));
-end;
-
-function m_mul(op1, op2:string):string;
-begin
-  if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
-    ShowError('"'+op1+'" or "'+op2+'" is not a number.');
-    m_mul:='~break';
-    exit;
-  end;
-  if (TypeOf(op1)='float') or (TypeOf(op2)='float') then
-  m_mul:=FloatToStr(StrToFloat(op1)*StrToFloat(op2))
-  else if (TypeOf(op1)='int') or (TypeOf(op2)='int') then
-  m_mul:=IntToStr(StrToInt(op1)*StrToInt(op2));
+  showDebugMsg('Types: op1 -> `'+TypeOf(op1)+'`, op2 -> `'+TypeOf(op2)+'`.');
+  if (TypeOf(op1)='float') or (TypeOf(op2)='float') then begin
+    if (fx='add') then mathEval:=FloatToStr(StrToFloat(op1) + StrToFloat(op2));
+    if (fx='sub') then mathEval:=FloatToStr(StrToFloat(op1) - StrToFloat(op2));
+    if (fx='mul') then mathEval:=FloatToStr(StrToFloat(op1) * StrToFloat(op2));
+    if (fx='div') then mathEval:=FloatToStr(StrToFloat(op1) / StrToFloat(op2));
+  end else
+  if (TypeOf(op1)='int') and (TypeOf(op2)='int') then begin
+    if (fx='add') then mathEval:=IntToStr(StrToInt(op1) + StrToInt(op2));
+    if (fx='sub') then mathEval:=IntToStr(StrToInt(op1) - StrToInt(op2));
+    if (fx='mul') then mathEval:=IntToStr(StrToInt(op1) * StrToInt(op2));
+    if (fx='div') then mathEval:=FloatToStr(StrToInt(op1) / StrToInt(op2));
+    if (fx='mod') then mathEval:=IntToStr(StrToInt(op1) mod StrToInt(op2));
+  end; 
 end;
 
 procedure GenDbgInfo;
@@ -410,20 +399,6 @@ begin
   if fx='leq'  then if not (ops(op1)<=ops(op2)) then inc(i);
   if fx='meq'  then if not (ops(op1)>=ops(op2)) then inc(i);
 
-  if fx='div' then begin
-    {if (TypeOf(op1)='string') or (TypeOf(op2)='string') then begin
-    ShowError('"'+ops(op1)+'" or "'+ops(op2)+'" is not a number. ');
-    Execute:='~break';
-    exit;
-  end;}
-    if (TypeOf(ops(op1))='float') or (TypeOf(ops(op2))='float') then
-      Execute:=FloatToStr(StrToFloat(ops(op1)) / StrToFloat(ops(op2)))
-    else if (StrToInt(ops(op1)) mod StrToInt(ops(op2)) <> 0) then
-      Execute:=FloatToStr(StrToFloat(ops(op1)) / StrToFloat(ops(op2)))
-    else
-      Execute:=IntToStr(StrToInt(ops(op1)) div StrToInt(ops(op2)));
-  end;
-
   if fx='dbginfo' then GenDbgInfo;
 
   if fx='debug' then if ops(op1)='on' then isDebug:=true else isDebug:=false;
@@ -433,9 +408,8 @@ begin
 
   if fx='set' then Execute:=SetVar(ops(op1), ops(op2));
 
-  if fx='add' then Execute:=m_add(ops(op1), ops(op2));
-  if fx='sub' then Execute:=m_sub(ops(op1), ops(op2));
-  if fx='mul' then Execute:=m_mul(ops(op1), ops(op2));
+  if ((fx = 'add') or (fx = 'sub') or (fx = 'mul') or (fx = 'div') or (fx = 'mod')) then 
+    Execute:=mathEval(fx, ops(op1), ops(op2));
 
   if fx='mod' then Execute:=IntToStr(StrToInt(ops(op1)) mod StrToInt(ops(op2)));
 
@@ -443,7 +417,9 @@ begin
   if fx='len'  then Execute:=IntToStr(length(ops(op1)));
   if fx='getc' then Execute:=ops(op1)[StrToInt(ops(op2))];
   if fx='jmp'  then MakeJump(op1);
-  ShowDebugMsg('Expression `'+code[i]+'` returns `'+Execute+'`');
+
+  if (Execute<>'') then ShowDebugMsg('Expression `'+code[i]+'` returns `'+Execute+'`.') 
+  else ShowDebugMsg('Expression `'+code[i]+'` is no-return function.')
 end;
 
 procedure StartExec(FileName: string);

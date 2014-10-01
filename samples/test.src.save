@@ -1,0 +1,7 @@
+include lib/strutils.src
+
+func main
+ pos "12345678", " "
+ out [_last], /n
+ dbginfo
+return 0

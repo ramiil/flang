@@ -5,7 +5,7 @@
 include lib/math.src
 
 func main
- debug on
+ debug off
  out "Random func test", /n
  out "How many numbers you need? "
  set count, [_inp]
@@ -17,6 +17,7 @@ func main
   out [_last], /n
   sub [count], 1
   set count, [_last]
-  more [_last], 1
+  more [_last], 0
  jmp :loop
+ dbginfo
 return 0
