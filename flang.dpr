@@ -6,6 +6,10 @@ program fLang;
 
 uses SysUtils;
 
+const
+  BR = {$IFDEF LINUX} AnsiChar(#10) {$ENDIF} 
+       {$IFDEF MSWINDOWS} AnsiString(#13#10) {$ENDIF};
+
 type theVar=record
   Name: string[32];
   Value: string[128];
@@ -37,10 +41,10 @@ begin
   WriteLn('[Error] ('+IntToStr(i)+'): '+errorMsg);
 end;
 
-procedure ShowDebugMsg(DebugMsg: string);
+procedure ShowDebugMsg(debugMsg: string);
 begin
-  if IsDebug then
-  WriteLn('[Debug] ('+IntToStr(i)+'): '+DebugMsg);
+  if isDebug then
+  WriteLn('[Debug] ('+IntToStr(i)+'): '+debugMsg);
 end;
 
 procedure VoidAll;
@@ -328,7 +332,7 @@ begin
     if (fx='mul') then mathEval:=IntToStr(StrToInt(op1) * StrToInt(op2));
     if (fx='div') then mathEval:=FloatToStr(StrToInt(op1) / StrToInt(op2));
     if (fx='mod') then mathEval:=IntToStr(StrToInt(op1) mod StrToInt(op2));
-  end; 
+  end;
 end;
 
 procedure GenDbgInfo;
@@ -352,7 +356,6 @@ end;
 
 function Execute(inpStr: string):string;
 var fx, op1, op2, buf: string;
-    j:integer;
 begin
   ShowDebugMsg('Execute expression `'+inpStr+'`');
   Execute:='';
@@ -408,7 +411,7 @@ begin
 
   if fx='set' then Execute:=SetVar(ops(op1), ops(op2));
 
-  if ((fx = 'add') or (fx = 'sub') or (fx = 'mul') or (fx = 'div') or (fx = 'mod')) then 
+  if ((fx = 'add') or (fx = 'sub') or (fx = 'mul') or (fx = 'div') or (fx = 'mod')) then
     Execute:=mathEval(fx, ops(op1), ops(op2));
 
   if fx='mod' then Execute:=IntToStr(StrToInt(ops(op1)) mod StrToInt(ops(op2)));
@@ -418,7 +421,7 @@ begin
   if fx='getc' then Execute:=ops(op1)[StrToInt(ops(op2))];
   if fx='jmp'  then MakeJump(op1);
 
-  if (Execute<>'') then ShowDebugMsg('Expression `'+code[i]+'` returns `'+Execute+'`.') 
+  if (Execute<>'') then ShowDebugMsg('Expression `'+code[i]+'` returns `'+Execute+'`.')
   else ShowDebugMsg('Expression `'+code[i]+'` is no-return function.')
 end;
 
@@ -427,8 +430,7 @@ begin
   SetLength(code, 1);
   returnIndex:=1;
   cyclesCount:=0;
-  WriteLn('[Info] Program started, '+IntToStr(OpenFile(FileName,1))+' strings loaded.');
-  WriteLn;
+  WriteLn('[Info] Program started, '+IntToStr(OpenFile(FileName, 1))+' strings loaded.'+BR);
 
   repeat
     inc(i);
@@ -439,17 +441,17 @@ begin
       Readln;
     end
   until (lastRezult='~break') or (i>=length(code));
-  WriteLn;
-  WriteLn('[Info] Program finished, '+IntToStr(cyclesCount)+' passes processed.');
+  Write(BR+'[Info] Program finished, '+IntToStr(cyclesCount)+' passes processed.');
 end;
 
 begin
   DecimalSeparator:='.';
-  if FileExists(ParamStr(1)) then FileName:=ParamStr(1);
-  WriteLn('fLang CLI v0.9.0 (01.07.14), (C) Ramiil Hetzer');
-  WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
-  WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]');
-  WriteLn;
+  if FileExists(ParamStr(1)+'.src') then FileName:=ParamStr(1)
+  else begin
+    WriteLn('fLang CLI v0.9.2 (14.01.15), (C) Ramiil Hetzer');
+    WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
+    WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]'+BR);
+  end;
 
   while (FileName='') do begin
     Write('File> ');

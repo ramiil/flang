@@ -1,0 +1,40 @@
+fLang CLI v0.9.1 (01.10.14), (C) Ramiil Hetzer
+https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com
+Syntax: flang [filename]
+
+File> [Info] Program started, 59 strings loaded.
+
+Random func test
+How many numbers you need? > Enter a seed > 488
+541
+161
+343
+275
+[Debug] (58): Generating debug info.
+Variables
+ Var[1] Name: `count` Value: `0`
+ Var[2] Name: `kex` Value: `275`
+ Var[3] Name: `rand.x` Value: `343`
+ Var[4] Name: `void` Value: ``
+ Var[5] Name: `void` Value: ``
+ Var[6] Name: `void` Value: ``
+ Var[7] Name: `void` Value: ``
+ Var[8] Name: `void` Value: ``
+ Var[9] Name: `void` Value: ``
+ Var[10] Name: `void` Value: ``
+ Var[11] Name: `void` Value: ``
+ Var[12] Name: `void` Value: ``
+ Var[13] Name: `void` Value: ``
+ Var[14] Name: `void` Value: ``
+ Var[15] Name: `void` Value: ``
+ Var[16] Name: `void` Value: ``
+ Var[17] Name: `void` Value: ``
+ Var[18] Name: `void` Value: ``
+ Var[19] Name: `void` Value: ``
+Functions
+ Func[1] Name: `rand` Address: `8`
+ Func[2] Name: `fac` Address: `14`
+ Func[3] Name: `pow` Address: `26`
+[Debug] (58): Debug info generated. Press any key to countinue.
+
+[Info] Program finished, 63 passes processed.
