@@ -1,14 +1,13 @@
 program fLang;
 
 {$IFDEF LINUX}
- {$mode objfpc}
+  {$mode objfpc}
 {$ENDIF}
 
 uses SysUtils;
 
 const
-  BR = {$IFDEF LINUX} AnsiChar(#10) {$ENDIF} 
-       {$IFDEF MSWINDOWS} AnsiString(#13#10) {$ENDIF};
+  BR = {$IFDEF LINUX} AnsiChar(#10) {$ENDIF}{$IFDEF MSWINDOWS} AnsiString(#13#10) {$ENDIF}; // Select newline code for different OS.
 
 type theVar=record
   Name: string[32];
@@ -36,18 +35,18 @@ var
   isDebug: boolean=false;
   isTrace: boolean=false;
 
-procedure ShowError(errorMsg: string);
+procedure errorMsg(errorMsg: string);
 begin
   WriteLn('[Error] ('+IntToStr(i)+'): '+errorMsg);
 end;
 
-procedure ShowDebugMsg(debugMsg: string);
+procedure debugMsg(debugMsg: string);
 begin
   if isDebug then
   WriteLn('[Debug] ('+IntToStr(i)+'): '+debugMsg);
 end;
 
-procedure VoidAll;
+procedure clearVars;
 var j: integer;
 begin
   for j:=1 to length(vars)-1 do begin
@@ -56,13 +55,13 @@ begin
   end;
 end;
 
-function SetVar(v_name, v_value: string): string;
+function setVar(v_name, v_value: string): string;
 var j: integer;
 begin
   { The "_" perfix is only for system variatables }
   if v_name[1]='_' then begin
-    ShowError('Unacceptable name "'+v_name+'"');
-    SetVar:='~break';
+    errorMsg('Unacceptable name "'+v_name+'"');
+    setVar:='~break';
     exit;
   end;
 
@@ -70,29 +69,29 @@ begin
     if (vars[j].Name='void') or (vars[j].Name=v_name) then begin
       vars[j].Name:=v_name;
       vars[j].Value:=v_value;
-      ShowDebugMsg('Variatable '+v_name+' takes value '+v_value);
-      SetVar:=v_value;
+      debugMsg('Variatable '+v_name+' takes value '+v_value);
+      setVar:=v_value;
       break;
     end;
   end;
 end;
 
-function GetVarIndex(v_name: string):integer;
+function getVarIndex(v_name: string):integer;
 var j: integer;
 begin
-  GetVarIndex:=0;
+  getVarIndex:=0;
     for j:=1 to length(vars)-1 do if vars[j].Name=v_name then begin
-    GetVarIndex:=j;
+    getVarIndex:=j;
     break;
   end;
 end;
 
-function GetVarValue(v_name: string):string;
+function getVarValue(v_name: string):string;
 var j: integer;
 begin
-  GetVarValue:='';
+  getVarValue:='';
   for j:=1 to length(vars)-1 do if vars[j].Name=v_name then begin
-    GetVarValue:=vars[j].Value;
+    getVarValue:=vars[j].Value;
     break;
   end;
 end;
@@ -100,15 +99,15 @@ end;
 procedure UnsetVar(v_name: string);
 var j: integer;
 begin
-  j:=GetVarIndex(v_name);
+  j:=getVarIndex(v_name);
   if j<>0 then begin
     vars[j].Name:='';
     vars[j].Value:='';
-    ShowDebugMsg('Variatable '+v_name+' destroyed');
+    debugMsg('Variatable '+v_name+' destroyed');
   end;
 end;
 
-procedure SetLabel(l_name: string; l_address: integer);
+procedure setLabel(l_name: string; l_address: integer);
 var j: integer;
 begin
   for j:=1 to length(labels)-1 do begin
@@ -120,19 +119,19 @@ begin
   end;
 end;
 
-function GetLabelAddr(l_name: string):integer;
+function getLabelAddr(l_name: string):integer;
 var j: integer;
 begin
-  GetLabelAddr:=0;
+  getLabelAddr:=0;
   for j:=1 to length(labels)-1 do begin
     if labels[j].Name=l_name then begin
-      GetLabelAddr:=labels[j].Addr;
+      getLabelAddr:=labels[j].Addr;
       break;
     end;
   end;
 end;
 
-procedure SetFunc(f_name: string; f_address: integer);
+procedure setFunc(f_name: string; f_address: integer);
 var j: integer;
 begin
   for j:=1 to length(funcs)-1 do begin
@@ -144,52 +143,52 @@ begin
   end;
 end;
 
-function GetFuncAddr(f_name: string):integer;
+function getFuncAddr(f_name: string):integer;
 var j: integer;
 begin
-  GetFuncAddr:=0;
+  getFuncAddr:=0;
   for j:=1 to length(funcs)-1 do begin
     if funcs[j].Name=f_name then begin
-      GetFuncAddr:=funcs[j].Addr;
+      getFuncAddr:=funcs[j].Addr;
       break;
     end;
   end;
 end;
 
 { Function returns type of argument }
-function TypeOf(inpStr: string):string;
+function typeOf(inpStr: string):string;
 var j: integer;
 begin
-  TypeOf:='int';
-  if ((inpStr='true') or (inpStr='null') or (inpStr='')) then TypeOf:='bool';
+  typeOf:='int';
+  if ((inpStr='true') or (inpStr='null') or (inpStr='')) then typeOf:='bool';
   for j:=1 to length(InpStr) do begin
     if (inpStr[j]='.') then begin
-      TypeOf:='float';
+      typeOf:='float';
       break;
     end;
     if not (inpStr[j] in ['0'..'9','-','+']) then begin
-      TypeOf:='string';
+      typeOf:='string';
       break;
     end;
   end;
 end;
 
 { Function extracts part of string before delimiter }
-function StrHead(str: string; delimiter: string):string;
+function strHead(str: string; delimiter: string):string;
 begin
   if pos(delimiter,str)<>0 then
-    StrHead:=copy(str, 1, pos(delimiter, str)-length(delimiter))
+    strHead:=copy(str, 1, pos(delimiter, str)-length(delimiter))
   else
-    StrHead:=str;
+    strHead:=str;
 end;
 
 { Function extracts part of string after delimiter }
-function StrTail(str: string; delimiter: string):string;
+function strTail(str: string; delimiter: string):string;
 begin
   if pos(delimiter,str)<>0 then
-    StrTail:=copy(str, pos(delimiter, str)+length(delimiter), length(str)-1)
+    strTail:=copy(str, pos(delimiter, str)+length(delimiter), length(str)-1)
   else
-    StrTail:='';
+    strTail:='';
 end;
 
 procedure Preproc(codeEnd: integer);
@@ -202,24 +201,24 @@ begin
   SetLength(labels, 1); // || Set array size to 1;
   SetLength(funcs, 1);  // ||
   while(j<codeEnd) do begin
-    cStrHead:=StrHead(code[j], ' ');
-    cStrTail:=StrTail(code[j], ' ');
+    cStrHead:=strHead(code[j], ' ');
+    cStrTail:=strTail(code[j], ' ');
     if (code[j]='') or ((code[j]=' ')) then code[j]:='nop 0';
     if (cStrHead='--') then code[j]:='nop 0'; // Cut the comments
     if (cStrHead='func') and (cStrTail='main') then i:=j;
     if cStrHead='set' then SetLength(vars, Length(vars)+1);// Set new var
     if cStrHead='label' then begin // Set new label
       SetLength(labels, Length(labels)+1);
-      SetLabel(cStrTail, j);
+      setLabel(cStrTail, j);
     end;
     if (cStrHead='func') and (cStrTail<>'main') then begin // Set new function
       SetLength(funcs, Length(funcs)+1);
       SetLength(vars, Length(vars)+2);
-      SetFunc(cStrTail, j);
+      setFunc(cStrTail, j);
     end;
     inc(j);
   end;
-  VoidAll;
+  clearVars;
 end;
 
 function ops(op: string):string;
@@ -228,7 +227,7 @@ begin
   buf:='';
   temp:=op;
 
-  ShowDebugMsg('Trying to ops `'+op+'`');
+  debugMsg('Trying to ops `'+op+'`');
 
   if ((op[1]='"') and (op[length(op)]='"')) then
     temp:=copy(op, 2, length(op)-2) else
@@ -240,15 +239,15 @@ begin
       Write('> ');
       Readln(temp);
     until (temp<>'')
-    else temp:=GetVarValue(buf);
+    else temp:=getVarValue(buf);
   end;
   ops:=temp;
 
-  ShowDebugMsg('Ops of `'+op+'` equals `'+temp+'`');
+  debugMsg('Ops of `'+op+'` equals `'+temp+'`');
 
 end;
 
-function cclear(Expr: string):string;
+function cclear(inpStr: string):string;
 var spFlag, qFlag: boolean;
     j: byte;
     buf: string;
@@ -257,25 +256,25 @@ begin
   spFlag:=true; // Previous character is a space?
   buf:='';
 
-  for j:=1 to length(Expr) do begin
-    if Expr[j]='"' then qFlag:=not qFlag;
-    if Expr[j]=' ' then begin
-      if (spFlag=false) and (qFlag=false) then buf:=buf+Expr[j];
+  for j:=1 to length(inpStr) do begin
+    if inpStr[j]='"' then qFlag:=not qFlag;
+    if inpStr[j]=' ' then begin
+      if (spFlag=false) and (qFlag=false) then buf:=buf+inpStr[j];
       spFlag:=true;
     end else spFlag:=false;
-    if (spFlag=false) then buf:=buf+Expr[j];
-    if (spFlag=true) and (qFlag=true) then buf:=buf+Expr[j];
+    if (spFlag=false) then buf:=buf+inpStr[j];
+    if (spFlag=true) and (qFlag=true) then buf:=buf+inpStr[j];
   end;
-
+  while pos(', ', buf)<>0 do buf:=StringReplace(buf, ', ', ',', [rfreplaceall]);
   cclear:=buf;
 end;
 
-function OpenFile(fName: string; offset: integer):integer;
+function openFile(fName: string; offset: integer):integer;
 var t: textfile;
     j: integer;
     buf: string;
 begin
-  OpenFile:=0;
+  openFile:=0;
 
   if not (FileExists(fName)) then fName:=fName+'.src';
   if not (FileExists(fName)) then Exit;
@@ -284,49 +283,49 @@ begin
   j:=offset;
 
   while not EOF(t) do begin
-    SetLength(code,length(code)+1);
+    setLength(code,length(code)+1);
     Readln(t,buf);
     buf:=cclear(buf);
     { Include a source file }
-    if StrHead(buf,' ')='include' then j:=OpenFile(ops(StrTail(buf,' ')),j)
+    if strHead(buf,' ')='include' then j:=openFile(ops(strTail(buf,' ')),j)
     else code[j]:=buf;
     inc(j);
   end;
 
   close(t);
-  OpenFile:=j-1;
+  openFile:=j-1;
   Preproc(j-1);
 end;
 
-procedure MakeJump(Address: string);
+procedure makeJump(Address: string);
 begin
 
-  ShowDebugMsg('Making jump to `'+ Address +'`');
+  debugMsg('Making jump to `'+ Address +'`');
 
-  if TypeOf(Address)='int' then i:=StrToInt(Address);
-  if TypeOf(Address)='string' then i:=GetLabelAddr(Address);
+  if typeOf(Address)='int' then i:=StrToInt(Address);
+  if typeOf(Address)='string' then i:=getLabelAddr(Address);
 end;
 
 function mathEval(fx, op1, op2:string):string;
 begin
-  if(TypeOf(op1)='string') then begin
-    ShowError('"'+op1+'" is not a number.');
+  if(typeOf(op1)='string') then begin
+    errorMsg('"'+op1+'" is not a number.');
     mathEval:='~break';
     exit;
   end;
-  if(TypeOf(op2)='string') then begin
-    ShowError('"'+op2+'" is not a number.');
+  if(typeOf(op2)='string') then begin
+    errorMsg('"'+op2+'" is not a number.');
     mathEval:='~break';
     exit;
   end;
-  showDebugMsg('Types: op1 -> `'+TypeOf(op1)+'`, op2 -> `'+TypeOf(op2)+'`.');
-  if (TypeOf(op1)='float') or (TypeOf(op2)='float') then begin
+  debugMsg('Types: op1 -> `'+typeOf(op1)+'`, op2 -> `'+typeOf(op2)+'`.');
+  if (typeOf(op1)='float') or (typeOf(op2)='float') then begin
     if (fx='add') then mathEval:=FloatToStr(StrToFloat(op1) + StrToFloat(op2));
     if (fx='sub') then mathEval:=FloatToStr(StrToFloat(op1) - StrToFloat(op2));
     if (fx='mul') then mathEval:=FloatToStr(StrToFloat(op1) * StrToFloat(op2));
     if (fx='div') then mathEval:=FloatToStr(StrToFloat(op1) / StrToFloat(op2));
   end else
-  if (TypeOf(op1)='int') and (TypeOf(op2)='int') then begin
+  if (typeOf(op1)='int') and (typeOf(op2)='int') then begin
     if (fx='add') then mathEval:=IntToStr(StrToInt(op1) + StrToInt(op2));
     if (fx='sub') then mathEval:=IntToStr(StrToInt(op1) - StrToInt(op2));
     if (fx='mul') then mathEval:=IntToStr(StrToInt(op1) * StrToInt(op2));
@@ -335,7 +334,7 @@ begin
   end;
 end;
 
-procedure GenDbgInfo;
+procedure genDbgInfo;
 var j:integer;
 begin
   WriteLn('[Debug] (', i, '): Generating debug info.');
@@ -352,35 +351,32 @@ begin
 
   WriteLn('[Debug] (', i, '): Debug info generated. Press any key to countinue.');
   ReadLn;
-end;
+end;	
 
 function Execute(inpStr: string):string;
 var fx, op1, op2, buf: string;
 begin
-  ShowDebugMsg('Execute expression `'+inpStr+'`');
+  debugMsg('Execute expression `'+inpStr+'`');
   Execute:='';
 
-  {Extract operands from inpStr}
-  while pos(', ',inpStr)<>0 do
-    inpStr:=StringReplace(inpStr,', ',',',[rfreplaceall]);
-
-  fx:=StrHead(inpStr,' '); // fx contains operator name
-  buf:=StrTail(inpStr,' ');
-  op1:=StrHead(buf,','); // op1 contains the first argument
-  op2:=StrTail(buf,','); // op2 contains the second argument
+  {Extract operands from inpStr and ops() it}
+  fx:=ops(strHead(inpStr,' ')); // fx contains operator name
+  buf:=strTail(inpStr,' ');
+  op1:=ops(strHead(buf,',')); // op1 contains the first argument
+  op2:=ops(strTail(buf,',')); // op2 contains the second argument
 
   {Check fx for user-defined function}
-  if GetFuncAddr(fx)<>0 then begin
+  if getFuncAddr(fx)<>0 then begin
     if (returnIndex>255) then begin // Check function call stack fill
-      ShowError('Function stack owerflow.');
+      errorMsg('Function stack owerflow.');
       Execute:='~break';
       exit;
     end;
-    if op1<>'' then SetVar(fx+'.x',ops(op1)); // Define the first argument as X
-    if op2<>'' then SetVar(fx+'.y',ops(op2)); // Define the second argument as Y
+    if op1<>'' then setVar(fx+'.x',ops(op1)); // Define the first argument as X
+    if op2<>'' then setVar(fx+'.y',ops(op2)); // Define the second argument as Y
     returnAddress[returnIndex]:=i; // Set return adress
     inc(returnIndex);
-    MakeJump(IntToStr(GetFuncAddr(fx))); // Making jump to the function
+    MakeJump(IntToStr(getFuncAddr(fx))); // Making jump to the function
   end;
 
   if fx='return' then begin
@@ -393,39 +389,42 @@ begin
     MakeJump(IntToStr(returnAddress[returnIndex]));
   end;
 
-  if fx='unset' then UnsetVar(ops(op1));
+  if fx='unset' then UnsetVar(op1);
 
-  if fx='eq'   then if not (ops(op1)=ops(op2))  then inc(i);
-  if fx='neq'  then if not (ops(op1)<>ops(op2)) then inc(i);
-  if fx='less' then if not (ops(op1)<ops(op2))  then inc(i);
-  if fx='more' then if not (ops(op1)>ops(op2))  then inc(i);
-  if fx='leq'  then if not (ops(op1)<=ops(op2)) then inc(i);
-  if fx='meq'  then if not (ops(op1)>=ops(op2)) then inc(i);
+  if fx='eq'   then if not (op1=op2)  then inc(i);
+  if fx='less' then if not (op1<op2)  then inc(i);
+  if fx='more' then if not (op1>op2)  then inc(i);
+  if fx='neq'  then if not (op1<>op2) then inc(i);
+  if fx='leq'  then if not (op1<=op2) then inc(i);
+  if fx='meq'  then if not (op1>=op2) then inc(i);
+
 
   if fx='dbginfo' then GenDbgInfo;
 
-  if fx='debug' then if ops(op1)='on' then isDebug:=true else isDebug:=false;
-  if fx='trace' then if ops(op1)='on' then isTrace:=true else isTrace:=false;
-  if fx='nop' then Sleep(StrToInt(ops(op1)));
-  if fx='out' then if op2='/n' then WriteLn(ops(op1)) else Write(ops(op1));
+  if fx='debug' then if op1='on' then isDebug:=true else isDebug:=false;
+  if fx='trace' then if op1='on' then isTrace:=true else isTrace:=false;
+  if fx='nop' then Sleep(StrToInt(op1));
+  if fx='out' then if op2='/n' then WriteLn(op1) else Write(op1);
 
-  if fx='set' then Execute:=SetVar(ops(op1), ops(op2));
+  if fx='set' then Execute:=setVar(op1, op2);
 
   if ((fx = 'add') or (fx = 'sub') or (fx = 'mul') or (fx = 'div') or (fx = 'mod')) then
-    Execute:=mathEval(fx, ops(op1), ops(op2));
+    Execute:=mathEval(fx, op1, op2);
 
-  if fx='mod' then Execute:=IntToStr(StrToInt(ops(op1)) mod StrToInt(ops(op2)));
+  if fx='mod' then Execute:=IntToStr(StrToInt(op1) mod StrToInt(op2));
 
-  if fx='conc' then Execute:=ops(op1) + ops(op2);
-  if fx='len'  then Execute:=IntToStr(length(ops(op1)));
-  if fx='getc' then Execute:=ops(op1)[StrToInt(ops(op2))];
+  if fx='conc' then Execute:=op1 + op2;
+  if fx='len'  then Execute:=IntToStr(length(op1));
+  if fx='getc' then Execute:=op1[StrToInt(op2)];
+  if fx='chr'  then Execute:=chr(StrToInt(op1));
+  if fx='ord'  then Execute:=IntToStr(ord(op1[1]));
   if fx='jmp'  then MakeJump(op1);
 
-  if (Execute<>'') then ShowDebugMsg('Expression `'+code[i]+'` returns `'+Execute+'`.')
-  else ShowDebugMsg('Expression `'+code[i]+'` is no-return function.')
+  if (Execute<>'') then debugMsg('Expression `'+code[i]+'` returns `'+Execute+'`.')
+  else debugMsg('Expression `'+code[i]+'` is no-return function.')
 end;
 
-procedure StartExec(FileName: string);
+procedure runProgram(FileName: string);
 begin
   SetLength(code, 1);
   returnIndex:=1;
@@ -448,7 +447,7 @@ begin
   DecimalSeparator:='.';
   if FileExists(ParamStr(1)+'.src') then FileName:=ParamStr(1)
   else begin
-    WriteLn('fLang CLI v0.9.2 (14.01.15), (C) Ramiil Hetzer');
+    WriteLn('fLang CLI v0.9.3 (20.01.15), (C) Ramiil Hetzer');
     WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
     WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]'+BR);
   end;
@@ -458,6 +457,6 @@ begin
     Readln(FileName);
     if not ((FileExists(FileName)) or (FileExists(FileName+'.src'))) then FileName:='';
   end;
-  StartExec(FileName);
+  runProgram(FileName);
   ReadLn;
 end.

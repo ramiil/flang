@@ -6,32 +6,3 @@ func rand
  add [_last], 123
  mod [_last], 607
 return [_last]
-
-func fac
- set fac.rezult, 1
- set fac.counter, 1
- label fac_loop
-  mul [fac.rezult], [fac.counter]
-  set fac.rezult, [_last]
-  add [fac.counter], 1
-  set fac.counter, [_last]
-  more [fac.x], [fac.counter]
- jmp fac_loop
-return [fac.rezult]
-
-func pow
- set pow.rezult, 1
- set pow.counter, 1
- eq [pow.y], 0
- jmp pow_end
- label pow_loop
-  mul [pow.rezult], [pow.x]
-  set pow.rezult, [_last]
-  add [pow.counter], 1
-  set pow.counter, [_last]
-  more [pow.y], [pow.counter]
- jmp pow_loop
- label pow_end
- eq [pow.x], -1
- set pow.rezult, -1
-return [pow.rezult]
