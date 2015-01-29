@@ -34,6 +34,7 @@ var
   i, returnIndex, cyclesCount: integer;
   isDebug: boolean=false;
   isTrace: boolean=false;
+  isSilent: boolean=false;
 
 procedure errorMsg(errorMsg: string);
 begin
@@ -276,8 +277,6 @@ var t: textfile;
 begin
   openFile:=0;
 
-  if not (FileExists(fName)) then fName:=fName+'.src';
-  if not (FileExists(fName)) then Exit;
   assign(t,fName);
   reset(t);
   j:=offset;
@@ -429,7 +428,9 @@ begin
   SetLength(code, 1);
   returnIndex:=1;
   cyclesCount:=0;
-  WriteLn('[Info] Program started, '+IntToStr(OpenFile(FileName, 1))+' strings loaded.'+BR);
+  if not(isSilent) then 
+    WriteLn('[Info] Program started, '+IntToStr(OpenFile(FileName, 1))+' strings loaded.'+BR)
+  else OpenFile(FileName, 1);
 
   repeat
     inc(i);
@@ -440,23 +441,23 @@ begin
       Readln;
     end
   until (lastRezult='~break') or (i>=length(code));
-  Write(BR+'[Info] Program finished, '+IntToStr(cyclesCount)+' passes processed.');
+  if not(isSilent) then 
+    Write(BR+'[Info] Program finished, '+IntToStr(cyclesCount)+' passes processed.');
 end;
 
 begin
   DecimalSeparator:='.';
-  if FileExists(ParamStr(1)+'.src') then FileName:=ParamStr(1)
+  if ParamStr(2)<>'-v' then isSilent:=true;
+  if FileExists(ParamStr(1)) then FileName:=ParamStr(1)
   else begin
-    WriteLn('fLang CLI v0.9.3 (20.01.15), (C) Ramiil Hetzer');
+    WriteLn('fLang CLI v0.9.4 (29.01.15), (C) Ramiil Hetzer');
     WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
     WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]'+BR);
-  end;
-
-  while (FileName='') do begin
-    Write('File> ');
-    Readln(FileName);
-    if not ((FileExists(FileName)) or (FileExists(FileName+'.src'))) then FileName:='';
+    while (FileName='') do begin
+      Write('File> ');
+      Readln(FileName);
+      if not (FileExists(FileName)) then FileName:='';
+    end;
   end;
   runProgram(FileName);
-  ReadLn;
 end.

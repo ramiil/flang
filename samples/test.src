@@ -1,7 +1,15 @@
-include lib/strutils.src
+func dd
+  set exPtr, 1
+  label :exs
+    add [exPtr], 1
+    set exPtr, [_last]
+    out "a", /n
+    less [exPtr], [dd.x]
+  jmp :exs
+return 0
 
 func main
- pos "12345678", " "
- out [_last], /n
- dbginfo
+  debug on
+  trace on
+  dd [_inp]
 return 0

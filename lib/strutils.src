@@ -1,50 +1,29 @@
--- fLang 2013 (c) Ramiil Hetzer
--- Standart string utilits libriary
+-- String utilits by Ramiil-kun
+-- 21.01.15
 
+-- Pos function - find substring position in string
+-- "pos [str], [substr]" -> integer value
 func pos
- debug on
- set pos.counter, 1
- len [pos.x]
- set pos.length, [_last]
- label @pos.start
-  getc [pos.x], [pos.counter]
-  eq [_last], [pos.y]
- jmp @pos.exit
-  add [pos.counter], 1
-  set pos.counter, [_last]
-  meq [pos.counter], [pos.length]
- jmp @pos.start
- label @pos.exit
-return [pos.counter]
-
-func car
- pos [car.x], [car.y]
- set car.dpos, [_last]
- set car.rez, ""
- set car.counter, 1
- label @car.start
-  getc [car.x], [car.counter]
-  conc [car.rez], [_last]
-  set car.rez, [_last]
-  add [car.counter], 1
-  set car.counter, [_last]
-  less [car.counter], [car.dpos]
- jmp @car.start
-return [car.rez]
-
-func cdr
- pos [cdr.x], [cdr.y]
- add [_last], 1
- set cdr.counter, [_last]
- set cdr.rez, ""
- len [cdr.x]
- set cdr.length, [_last]
- label @cdr.start
-  getc [cdr.x], [cdr.counter]
-  conc [cdr.rez], [_last]
-  set cdr.rez, [_last]
-  add [cdr.counter], 1
-  set cdr.counter, [_last]
-  meq [cdr.counter], [cdr.length]
- jmp @cdr.start
-return [cdr.rez]
+  set exPtr, 0
+  label :start
+    add [exPtr], 1
+    set exPtr, [_last]
+    set inPtr, 0
+    label :instr
+      add [inPtr], 1
+      set inPtr, [_last]
+      getc [pos.x], [exPtr]
+      set cym, [_last]
+      getc [pos.y], [inPtr]
+      eq [_last], [cym]
+      jmp :instr
+      len [pos.y]
+      leq [_last], [inPtr]
+    len [pos.x]
+    leq [_last], [exPtr]
+  jmp :start
+  len [pos.x]
+  eq [_last], [exPtr]
+  set exPtr, 0
+return [exPtr]
+    
