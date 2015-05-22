@@ -27,9 +27,9 @@ end;
 var
   returnAddress: array [1..255] of integer;
   code: array of string[255];
-  vars: array of TheVar;
-  labels: array of TheLabel;
-  funcs: array of TheFunc;
+  vars: array of theVar;
+  labels: array of theLabel;
+  funcs: array of theFunc;
   fileName, lastRezult: string;
   i, returnIndex, cyclesCount: integer;
   isDebug: boolean=false;
@@ -61,7 +61,7 @@ var j: integer;
 begin
   { The "_" perfix is only for system variatables }
   if v_name[1]='_' then begin
-    errorMsg('Unacceptable name "'+v_name+'"');
+    errorMsg('Unacceptable name "'+v_name+'"');  // All vars with _ as first character, are readonly.
     setVar:='~break';
     exit;
   end;
@@ -97,14 +97,14 @@ begin
   end;
 end;
 
-procedure UnsetVar(v_name: string);
+procedure unsetVar(v_name: string);
 var j: integer;
 begin
   j:=getVarIndex(v_name);
   if j<>0 then begin
-    vars[j].Name:='';
+    vars[j].Name:='void';
     vars[j].Value:='';
-    debugMsg('Variatable '+v_name+' destroyed');
+    debugMsg('Variatable '+v_name+' voided');
   end;
 end;
 
@@ -228,7 +228,7 @@ begin
   buf:='';
   temp:=op;
 
-  debugMsg('Trying to ops `'+op+'`');
+  debugMsg('Trying to ops `'+op+'` '+'thats type is '+typeOf(op));
 
   if ((op[1]='"') and (op[length(op)]='"')) then
     temp:=copy(op, 2, length(op)-2) else
@@ -350,7 +350,7 @@ begin
 
   WriteLn('[Debug] (', i, '): Debug info generated. Press any key to countinue.');
   ReadLn;
-end;	
+end;
 
 function Execute(inpStr: string):string;
 var fx, op1, op2, buf: string;
@@ -359,7 +359,7 @@ begin
   Execute:='';
 
   {Extract operands from inpStr and ops() it}
-  fx:=ops(strHead(inpStr,' ')); // fx contains operator name
+  fx:=strHead(inpStr,' '); // fx contains operator name
   buf:=strTail(inpStr,' ');
   op1:=ops(strHead(buf,',')); // op1 contains the first argument
   op2:=ops(strTail(buf,',')); // op2 contains the second argument
@@ -367,7 +367,7 @@ begin
   {Check fx for user-defined function}
   if getFuncAddr(fx)<>0 then begin
     if (returnIndex>255) then begin // Check function call stack fill
-      errorMsg('Function stack owerflow.');
+      errorMsg('Call stack owerflow.');
       Execute:='~break';
       exit;
     end;
@@ -390,12 +390,14 @@ begin
 
   if fx='unset' then UnsetVar(op1);
 
-  if fx='eq'   then if not (op1=op2)  then inc(i);
-  if fx='less' then if not (op1<op2)  then inc(i);
-  if fx='more' then if not (op1>op2)  then inc(i);
-  if fx='neq'  then if not (op1<>op2) then inc(i);
-  if fx='leq'  then if not (op1<=op2) then inc(i);
-  if fx='meq'  then if not (op1>=op2) then inc(i);
+  if fx='streq'  then if not (op1=op2)  then inc(i);
+  if fx='strneq' then if not (op1<>op2) then inc(i);
+  if fx='eq'   then if not (strToFloat(op1)=strToFloat(op2))  then inc(i);
+  if fx='less' then if not (strToFloat(op1)<strToFloat(op2))  then inc(i);
+  if fx='more' then if not (strToFloat(op1)>strToFloat(op2))  then inc(i);
+  if fx='neq'  then if not (strToFloat(op1)<>strToFloat(op2)) then inc(i);
+  if fx='leq'  then if not (strToFloat(op1)<=strToFloat(op2)) then inc(i);
+  if fx='meq'  then if not (strToFloat(op1)>=strToFloat(op2)) then inc(i);
 
 
   if fx='dbginfo' then GenDbgInfo;
@@ -428,7 +430,7 @@ begin
   SetLength(code, 1);
   returnIndex:=1;
   cyclesCount:=0;
-  if not(isSilent) then 
+  if not(isSilent) then
     WriteLn('[Info] Program started, '+IntToStr(OpenFile(FileName, 1))+' strings loaded.'+BR)
   else OpenFile(FileName, 1);
 
@@ -441,7 +443,7 @@ begin
       Readln;
     end
   until (lastRezult='~break') or (i>=length(code));
-  if not(isSilent) then 
+  if not(isSilent) then
     Write(BR+'[Info] Program finished, '+IntToStr(cyclesCount)+' passes processed.');
 end;
 
@@ -450,7 +452,7 @@ begin
   if ParamStr(2)<>'-v' then isSilent:=true;
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1)
   else begin
-    WriteLn('fLang CLI v0.9.4 (29.01.15), (C) Ramiil Hetzer');
+    WriteLn('fLang CLI v0.9.5 (22.05.15), (C) Ramiil Hetzer');
     WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
     WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]'+BR);
     while (FileName='') do begin

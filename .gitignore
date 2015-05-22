@@ -8,5 +8,6 @@ __history
 *.exe
 *.dll
 bin/*
-fp.*
+fp*
 *.o
+*.bak
