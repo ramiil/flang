@@ -1,5 +1,0 @@
-func main
-  debug on
-  div 5, 3d
-  out [_last], /n
-return 0
