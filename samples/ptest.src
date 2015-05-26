@@ -1,0 +1,7 @@
+include lib/math.src
+
+func main
+ debug on
+ sin 2, 5
+ out [_last]
+return 0
