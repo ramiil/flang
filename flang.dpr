@@ -452,7 +452,7 @@ begin
   if ParamStr(2)<>'-v' then isSilent:=true;
   if FileExists(ParamStr(1)) then FileName:=ParamStr(1)
   else begin
-    WriteLn('fLang CLI v0.9.5 (22.05.15), (C) Ramiil Hetzer');
+    WriteLn('fLang CLI v0.9.5a (26.05.15), (C) Ramiil Hetzer');
     WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
     WriteLn('Syntax: '+ExtractFileName(ParamStr(0))+' [filename]'+BR);
     while (FileName='') do begin
