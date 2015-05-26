@@ -1,0 +1,20 @@
+#!/home/ramiil/flang/flang
+# Sample program from fLang interpreter.
+# Speedtest based on LKM pseudorandom generator
+# fLang 2014 (c) Ramiil Hetzer
+
+include lib/math.src
+
+func main
+ debug off
+ set count, 10
+ set kex, 547
+ label :loop
+  rand [kex]
+  set kex, [_last]
+  out [_last], /n
+  sub [count], 1
+  set count, [_last]
+  more [_last], 0
+ jmp :loop
+return 0

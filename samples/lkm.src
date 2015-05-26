@@ -1,0 +1,24 @@
+#!/home/ramiil/flang/flang
+# Sample program from fLang interpreter.
+# It prints some pseudorandom numbers.
+# fLang 2014 (c) Ramiil Hetzer
+
+include lib/math.src
+
+func main
+ debug off
+ out "Random func test", /n
+ out "How many numbers you need? "
+ set count, [_inp]
+ out "Enter a seed "
+ set kex, [_inp]
+ label :loop
+  rand [kex]
+  set kex, [_last]
+  out [_last], /n
+  sub [count], 1
+  set count, [_last]
+  more [_last], 0
+ jmp :loop
+# dbginfo
+return 0

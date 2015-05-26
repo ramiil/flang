@@ -1,0 +1,29 @@
+-- String utilits by Ramiil-kun
+-- 21.01.15
+
+-- Pos function - find substring position in string
+-- "pos [str], [substr]" -> integer value
+func pos
+  set exPtr, 0
+  label :start
+    add [exPtr], 1
+    set exPtr, [_last]
+    set inPtr, 0
+    label :instr
+      add [inPtr], 1
+      set inPtr, [_last]
+      getc [pos.x], [exPtr]
+      set cym, [_last]
+      getc [pos.y], [inPtr]
+      eq [_last], [cym]
+      jmp :instr
+      len [pos.y]
+      leq [_last], [inPtr]
+    len [pos.x]
+    leq [_last], [exPtr]
+  jmp :start
+  len [pos.x]
+  eq [_last], [exPtr]
+  set exPtr, 0
+return [exPtr]
+    
