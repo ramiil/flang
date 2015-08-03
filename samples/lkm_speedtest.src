@@ -6,8 +6,8 @@
 include lib/math.src
 
 func main
- debug off
- set count, 10
+ debug on
+ set count, 1
  set kex, 547
  label :loop
   rand [kex]
@@ -17,4 +17,5 @@ func main
   set count, [_last]
   more [_last], 0
  jmp :loop
+ alldump
 return 0
