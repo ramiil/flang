@@ -20,5 +20,5 @@ func main
   set count, [_last]
   more [_last], 0
  jmp :loop
-# dbginfo
+ alldump
 return 0
