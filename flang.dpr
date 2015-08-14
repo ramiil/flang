@@ -4,7 +4,7 @@ program fLang;
   {$mode objfpc}
 {$ENDIF}
 
-uses SysUtils;
+uses SysUtils, linux;
 
 const
   BR = {$IFDEF LINUX} AnsiChar(#10) {$ENDIF}{$IFDEF MSWINDOWS} AnsiString(#13#10) {$ENDIF}; // Select newline code for different OS.
@@ -30,7 +30,7 @@ var
   vars:          array of theVar;
   labels:        array of theLabel;
   funcs:         array of theFunc;
-  fileName, lastRezult: string;
+  lastRezult:    string;
   codePtr, returnIndex, cyclesCount: longint;
   isDebug:  boolean=false;
   isTrace:  boolean=false;
@@ -55,27 +55,6 @@ begin
   end;
 end;
 
-function setVar(v_name, v_value: string): string;
-var j: longint;
-begin
-  { The `_` perfix is only for system Variables }
-  if v_name[1]='_' then begin
-    errorMsg('Unacceptable name `'+v_name+'`');  // All vars with _ as first character, are readonly.
-    setVar:='~break';
-    exit;
-  end;
-
-  for j:=1 to length(vars)-1 do begin
-    if (vars[j].Name='null') or (vars[j].Name=v_name) then begin
-      vars[j].Name:=v_name;
-      vars[j].Value:=v_value;
-      debugMsg('Variable `'+v_name+'` takes value `'+v_value+'`');
-      setVar:=v_value;
-      break;
-    end;
-  end;
-end;
-
 function getVarIndex(v_name: string):longint;
 var j: longint;
 begin
@@ -84,6 +63,42 @@ begin
     getVarIndex:=j;
     break;
   end;
+end;
+
+function setVar(v_name, v_value: string): string;
+var v_index: longint = 0;
+begin
+  { The `_` perfix is only for r/o system Variables }
+  if v_name[1]='_' then begin
+    errorMsg('Unacceptable name `'+v_name+'`');  // All vars with _ as first character, are readonly
+    setVar:='~break';
+    exit;
+  end;
+
+  // Old source code. I'll delete this in next release
+  {for j:=1 to length(vars)-1 do begin
+    if (vars[j].Name='null') or (vars[j].Name=v_name) then begin
+      vars[j].Name:=v_name;
+      vars[j].Value:=v_value;
+      debugMsg('Variable `'+v_name+'` takes value `'+v_value+'`');
+      setVar:=v_value;
+      break;
+    end;
+  end;}
+  
+  if getVarIndex(v_name)<>0 then v_index:=getVarIndex(v_name)       // Variable with same name is curerently exist
+  else if getVarIndex('null')<>0 then v_index:=getVarIndex('null')  // Empty variable is currently exist
+  else begin
+    SetLength(vars, length(vars)+1);  // Or make new cell for now variable
+    v_index:=length(vars)-1;
+  end;
+  
+  // Assign variable value to it's name
+  vars[v_index].Name:=v_name;
+  vars[v_index].Value:=v_value;
+  debugMsg('Variable `'+v_name+'` takes value `'+v_value+'`');
+  setVar:=v_value;
+  
 end;
 
 function getVarValue(v_name: string):string;
@@ -221,6 +236,14 @@ begin
   cleanVars;
 end;
 
+function eOps(op: string):string;
+var buf, temp: string;
+    j: longint;
+begin
+  { It will be ops() re-implementation with blackjack and hookers }
+  
+end;
+
 function ops(op: string):string;
 var buf, temp: string;
 begin
@@ -229,7 +252,7 @@ begin
 
   if op<>'' then debugMsg('Type of `'+op+'` is '+typeOf(op));
 
-  if ((op[1]='`') and (op[length(op)]='`')) then
+  if ((op[1]='"') and (op[length(op)]='"')) then
     temp:=copy(op, 2, length(op)-2) else
   if ((op[1]='[') and (op[length(op)]=']')) then begin
     buf:=copy(op, 2, length(op)-2);
@@ -253,7 +276,7 @@ var spFlag, qFlag: boolean;
     j: byte;
     buf: string;
 begin
-// Achtung! Black magic here!
+  { This code remove all extra spaces, except ones into quotes block. Black magic here }
   qFlag:=false; // Pointer in the `"` block?
   spFlag:=true; // Previous character is a space?
   buf:='';
@@ -298,12 +321,12 @@ begin
   Preproc(j-1);
 end;
 
-procedure makeJump(Address: string);
+procedure makeJump(Addr: string);
 begin
-  debugMsg('Make jump to address `'+ Address +'`');
+  debugMsg('Make jump to address `'+ Addr +'`');
 
-  if typeOf(Address)='int'    then codePtr:=StrToInt(Address);
-  if typeOf(Address)='string' then codePtr:=getLabelAddr(Address);
+  if typeOf(Addr)='int'    then codePtr:=StrToInt(Addr);
+  if typeOf(Addr)='string' then codePtr:=getLabelAddr(Addr);
 end;
 
 function mathEval(fx, op1, op2:string):string;
@@ -344,13 +367,13 @@ begin
 
   WriteLn('Variables');
   for j:=1 to Length(vars)-1 do 
-    if vars[j].Name<>'null' then 
+    //if vars[j].Name<>'null' then 
       Writeln(' Var['+IntToStr(j)+'] Name: `'+vars[j].name+'`, value: `'+vars[j].value+'`');
 
   WriteLn('Functions');
   for j:=1 to Length(funcs)-1 do
-    if funcs[j].Name<>'null' then 
-    Writeln(' Func['+IntToStr(j)+'] Name: `'+funcs[j].name+'`, address: `'+IntToStr(funcs[j].addr)+'`');
+    //if funcs[j].Name<>'null' then 
+      Writeln(' Func['+IntToStr(j)+'] Name: `'+funcs[j].name+'`, address: `'+IntToStr(funcs[j].addr)+'`');
 
   debugMsg('Debug info generated. Press any key to countinue.');
   ReadLn;
@@ -436,8 +459,7 @@ procedure runProgram(FileName: string);
 begin
   SetLength(code, 1);
   returnIndex:=1;
-  cyclesCount:=0
-  ;
+  cyclesCount:=0;
   OpenFile(FileName, 1);
 
   repeat
@@ -457,7 +479,7 @@ begin
   {$ENDIF}
   if FileExists(ParamStr(1)) then  runProgram(ParamStr(1))
   else begin
-    WriteLn('fLang CLI v0.9.6 (03 AUG 2015) Copyright (c) 2011-2015 Nikita Lindmann');
+    WriteLn('fLang CLI v0.9.7 (14 AUG 2015) Copyright (c) 2011-2015 Nikita Lindmann');
     WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
     WriteLn('Usage: ./'+ExtractFileName(ParamStr(0))+' [filename]');
   end;
