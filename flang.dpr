@@ -74,17 +74,6 @@ begin
     setVar:='~break';
     exit;
   end;
-
-  // Old source code. I'll delete this in next release
-  {for j:=1 to length(vars)-1 do begin
-    if (vars[j].Name='null') or (vars[j].Name=v_name) then begin
-      vars[j].Name:=v_name;
-      vars[j].Value:=v_value;
-      debugMsg('Variable `'+v_name+'` takes value `'+v_value+'`');
-      setVar:=v_value;
-      break;
-    end;
-  end;}
   
   if getVarIndex(v_name)<>0 then v_index:=getVarIndex(v_name)       // Variable with same name is curerently exist
   else if getVarIndex('null')<>0 then v_index:=getVarIndex('null')  // Empty variable is currently exist
