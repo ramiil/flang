@@ -112,6 +112,9 @@ BFIL(Biargumental Functional Interpretive Language) и FAIL(Functional Asm-like I
 3. strutils:car (2) (string) - Возвращает часть строки, переданной в первом аргументе, от символа под номером, переданным во 
 втором аргументе, до конца строки.
 
+МАССИВЫ
+[var1] - простая переменная
+[var1[i]] - одномерный массив
 
 ПРИМЕРЫ КОДА
 
@@ -125,7 +128,7 @@ end
 
 
 # fLang 2013 (c) Ramiil Hetzer
-# add_two.src
+# summ.src
 # Сложение двух чисел
 
 begin
@@ -136,7 +139,7 @@ end
 
 
 # fLang 2013 (c) Ramiil Hetzer
-# avergae.src
+# average.src
 # Рассчёт средне-арифметического
 
 begin
@@ -154,8 +157,8 @@ end
 
 func test
  out "Это работает!",/n
- out test.x, /n
- out test.y, /n 
+ out [test.x], /n
+ out [test.y], /n 
 return 0
 
 begin

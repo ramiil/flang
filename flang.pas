@@ -4,7 +4,7 @@ program fLang;
   {$mode objfpc}
 {$ENDIF}
 
-uses SysUtils, linux;
+uses SysUtils;
 
 const
   BR = {$IFDEF LINUX} AnsiChar(#10) {$ENDIF}{$IFDEF MSWINDOWS} AnsiString(#13#10) {$ENDIF}; // Select newline code for different OS.
@@ -34,16 +34,17 @@ var
   codePtr, returnIndex, cyclesCount: longint;
   isDebug:  boolean=false;
   isTrace:  boolean=false;
+  isFExit:  boolean=false;
 
 procedure errorMsg(errorMsg: string);
 begin
-  WriteLn('[Error] ('+IntToStr(codePtr)+'): '+errorMsg);
+  Write(BR+'[Error] @'+IntToStr(codePtr)+': '+errorMsg);
 end;
 
 procedure debugMsg(debugMsg: string);
 begin
   if isDebug then
-  WriteLn('[Debug] ('+IntToStr(codePtr)+'): '+debugMsg);
+  Write(BR+'[Debug] @'+IntToStr(codePtr)+': '+debugMsg);
 end;
 
 procedure cleanVars;
@@ -74,10 +75,10 @@ begin
     setVar:='~break';
     exit;
   end;
-  
-  if getVarIndex(v_name)<>0 then v_index:=getVarIndex(v_name)       // Variable with same name is curerently exist
-  else if getVarIndex('null')<>0 then v_index:=getVarIndex('null')  // Empty variable is currently exist
-  else begin
+
+  v_index:=getVarIndex(v_name); // Variable with same name is curerently exist
+  if (v_index=0) then v_index:=getVarIndex('null'); // Empty variable is currently exist
+  if (v_index=0) then begin
     SetLength(vars, length(vars)+1);  // Or make new cell for now variable
     v_index:=length(vars)-1;
   end;
@@ -94,6 +95,14 @@ function getVarValue(v_name: string):string;
 var j: longint;
 begin
   getVarValue:='';
+
+  if v_name='_last' then getVarValue:=lastRezult else
+  if v_name='_ip' then getVarValue:=IntToStr(codePtr) else
+  if v_name='_inp' then repeat
+    Write('> ');
+    Readln(getVarValue);
+  until (getVarValue<>'');
+
   for j:=1 to length(vars)-1 do if vars[j].Name=v_name then begin
     getVarValue:=vars[j].Value;
     break;
@@ -210,14 +219,14 @@ begin
     if (code[j]='') or ((code[j]=' ')) then code[j]:='nop 0';
     if (cStrHead='--') then code[j]:='nop 0'; // Cut the comments
     if (cStrHead='func') and (cStrTail='main') then codePtr:=j;
-    if cStrHead='set' then SetLength(vars, Length(vars)+1); // Set new var
+    //if cStrHead='set' then SetLength(vars, Length(vars)+1); // Set new var
     if cStrHead='label' then begin // Set new label
       SetLength(labels, Length(labels)+1);
       setLabel(cStrTail, j);
     end;
     if (cStrHead='func') and (cStrTail<>'main') then begin // Set new function
       SetLength(funcs, Length(funcs)+1);
-      SetLength(vars, Length(vars)+2);
+      //SetLength(vars, Length(vars)+2);
       setFunc(cStrTail, j);
     end;
     inc(j);
@@ -225,39 +234,42 @@ begin
   cleanVars;
 end;
 
-function eOps(op: string):string;
-var buf, temp: string;
-    j: longint;
+function extractVarValue(op: string):string;
+var brOpen, delimiterPos: integer;
+    buf: string;
 begin
-  { It will be ops() re-implementation with blackjack and hookers }
-  
+
+  brOpen:= LastDelimiter('[', op);
+
+  if brOpen=0 then begin
+    extractVarValue:=getVarValue(op);
+    exit;
+  end;
+
+  buf:=op;
+
+  buf:=copy(buf, brOpen+1, pos(']',  buf)-(brOpen+1));
+  delimiterPos:=pos(buf, op);
+  delete(op, delimiterPos, length(buf));
+  insert(getVarValue(buf), op, delimiterPos);
+  extractVarValue:=extractVarValue(op);
 end;
 
 function ops(op: string):string;
-var buf, temp: string;
 begin
-  buf:='';
-  temp:=op;
+  ops:=op;
 
   if op<>'' then debugMsg('Type of `'+op+'` is '+typeOf(op));
 
   if ((op[1]='"') and (op[length(op)]='"')) then
-    temp:=copy(op, 2, length(op)-2) else
-  if ((op[1]='[') and (op[length(op)]=']')) then begin
-    buf:=copy(op, 2, length(op)-2);
-    if buf='_last' then temp:=lastRezult else
-    if buf='_ip' then temp:=IntToStr(codePtr) else
-    if buf='_inp' then repeat
-      Write('> ');
-      Readln(temp);
-    until (temp<>'')
-    else temp:=getVarValue(buf);
+    ops:=copy(op, 2, length(op)-2) else
+  if (op[1]='[') then begin
+    ops:=extractVarValue(copy(op, 2, length(op)-2));
   end;
-  ops:=temp;
 
   if op<>'' then
-    if op=temp then debugMsg('Maybe `'+op+'` is a constant')
-    else debugMsg('`'+op+'` means `'+temp+'`');
+    if ops=op then debugMsg('Maybe `'+op+'` is a constant')
+    else debugMsg('`'+op+'` means `'+ops+'`');
 end;
 
 function cclear(inpStr: string):string;
@@ -423,6 +435,7 @@ begin
 
   if fx='debug' then if op1='on' then isDebug:=true else isDebug:=false;
   if fx='trace' then if op1='on' then isTrace:=true else isTrace:=false;
+  if fx='fexit' then if op1='on' then isFExit:=true else isFExit:=false;
   if fx='nop' then Sleep(StrToInt(op1));
   if fx='out' then if op2='/n' then WriteLn(op1) else Write(op1);
 
@@ -460,6 +473,7 @@ begin
       Readln;
     end
   until (lastRezult='~break') or (codePtr>=length(code));
+  //if not isFExit then ReadLn();
 end;
 
 begin
@@ -468,7 +482,7 @@ begin
   {$ENDIF}
   if FileExists(ParamStr(1)) then  runProgram(ParamStr(1))
   else begin
-    WriteLn('fLang CLI v0.9.7 (14 AUG 2015) Copyright (c) 2011-2015 Nikita Lindmann');
+    WriteLn('fLang CLI v0.9.7a (15 DEC 2015) Copyright (c) 2011-2015 Nikita Lindmann');
     WriteLn('https://github.com/ramiil-kun/flang mailto:ramiil.kun@gmail.com');
     WriteLn('Usage: ./'+ExtractFileName(ParamStr(0))+' [filename]');
   end;
